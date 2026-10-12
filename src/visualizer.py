@@ -45,6 +45,17 @@ def format_month_label(m_str: str) -> str:
     return f"{clean_val} "
 
 
+def freeze_chart_interactions(fig: go.Figure) -> go.Figure:
+    """
+    사용자가 차트를 클릭하거나 터치/드래그할 때 줌, 팬, 영역 선택 등으로 인해
+    차트 축이 왜곡되거나 깨지지 않도록 모든 축을 고정(fixedrange=True)하고 드래그 줌을 비활성화합니다.
+    """
+    fig.update_layout(dragmode=False)
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
+    return fig
+
+
 def plot_monthly_revenue_and_cost(
     monthly_df: pd.DataFrame,
     metric_mode: str = "💰 광고비 vs 매출 & ROAS",
@@ -327,7 +338,7 @@ def plot_monthly_revenue_and_cost(
         paper_bgcolor="white"
     )
 
-    return fig
+    return freeze_chart_interactions(fig)
 
 
 def plot_channel_comparison_bar(channel_df: pd.DataFrame) -> go.Figure:
@@ -375,7 +386,7 @@ def plot_channel_comparison_bar(channel_df: pd.DataFrame) -> go.Figure:
         margin=dict(l=30, r=30, t=35, b=25)
     )
 
-    return fig
+    return freeze_chart_interactions(fig)
 
 
 def plot_channel_cost_share(
@@ -431,7 +442,7 @@ def plot_channel_cost_share(
             plot_bgcolor="white",
             paper_bgcolor="white"
         )
-        return fig
+        return freeze_chart_interactions(fig)
 
     # 2. 트리맵 차트 (모던 면적형)
     elif "트리맵" in c_type_clean or "tree" in c_type_clean:
@@ -450,7 +461,7 @@ def plot_channel_cost_share(
             margin=dict(l=10, r=10, t=15, b=10),
             font=dict(family="Pretendard, -apple-system, sans-serif")
         )
-        return fig
+        return freeze_chart_interactions(fig)
 
     # 3. 도넛 / 파이 차트
     else:
@@ -482,7 +493,7 @@ def plot_channel_cost_share(
             paper_bgcolor="white",
             margin=dict(l=15, r=15, t=15, b=30)
         )
-        return fig
+        return freeze_chart_interactions(fig)
 
 
 def plot_sales_channel_share(
@@ -550,7 +561,7 @@ def plot_sales_channel_share(
             plot_bgcolor="white",
             paper_bgcolor="white"
         )
-        return fig
+        return freeze_chart_interactions(fig)
 
     # 2. 트리맵 차트 (면적형)
     elif "트리맵" in c_type_clean or "tree" in c_type_clean:
@@ -569,7 +580,7 @@ def plot_sales_channel_share(
             margin=dict(l=10, r=10, t=15, b=10),
             font=dict(family="Pretendard, -apple-system, sans-serif")
         )
-        return fig
+        return freeze_chart_interactions(fig)
 
     # 3. 도넛 / 파이 차트
     else:
@@ -601,7 +612,7 @@ def plot_sales_channel_share(
             paper_bgcolor="white",
             margin=dict(l=15, r=15, t=15, b=30)
         )
-        return fig
+        return freeze_chart_interactions(fig)
 
 
 def plot_pie_category(df: pd.DataFrame, category_col: str, value_col: str, height: int = 310) -> go.Figure:
@@ -637,7 +648,7 @@ def plot_pie_category(df: pd.DataFrame, category_col: str, value_col: str, heigh
         paper_bgcolor="white"
     )
 
-    return fig
+    return freeze_chart_interactions(fig)
 
 
 def plot_channel_trend_line(df: pd.DataFrame, metric_cols: List[str], height: int = 310) -> go.Figure:
@@ -684,4 +695,4 @@ def plot_channel_trend_line(df: pd.DataFrame, metric_cols: List[str], height: in
         paper_bgcolor="white"
     )
 
-    return fig
+    return freeze_chart_interactions(fig)

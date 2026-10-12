@@ -1236,6 +1236,34 @@ def render_styled_accounting_table(
 
 
 # ----------------------------------------------------------------------
+# Plotly 인터랙션 공통 설정: 줌/팬 영역 선택 왜곡 도구 제거, 스크린샷 카메라만 유지
+# ----------------------------------------------------------------------
+PLOTLY_CONFIG: Dict[str, Any] = {
+    "displayModeBar": True,
+    "displaylogo": False,
+    "modeBarButtonsToRemove": [
+        "zoom2d",
+        "pan2d",
+        "select2d",
+        "lasso2d",
+        "zoomIn2d",
+        "zoomOut2d",
+        "autoScale2d",
+        "resetScale2d",
+        "hoverClosestCartesian",
+        "hoverCompareCartesian",
+    ],
+    "toImageButtonOptions": {
+        "format": "png",
+        "filename": "대시보드_차트",
+        "scale": 2,
+    },
+    "scrollZoom": False,
+    "doubleClick": False,
+}
+
+
+# ----------------------------------------------------------------------
 # 테이블 컬럼 기본 너비 정의 (st.dataframe의 small/medium 규격과 1:1 매칭)
 # ----------------------------------------------------------------------
 DEFAULT_COL_WIDTHS: Dict[str, int] = {
@@ -1786,7 +1814,8 @@ if "통합 대시보드" in selected_page:
             ),
             use_container_width=True,
             key="chart_monthly_main",
-            on_select="rerun"
+            on_select="rerun",
+            config=PLOTLY_CONFIG
         )
 
     with g2:
@@ -1807,7 +1836,8 @@ if "통합 대시보드" in selected_page:
             ),
             use_container_width=True,
             key="chart_share_main",
-            on_select="rerun"
+            on_select="rerun",
+            config=PLOTLY_CONFIG
         )
 
     # 그래프와 하단 표 사이 여백 확보
@@ -1933,7 +1963,8 @@ if "통합 대시보드" in selected_page:
                 height=chart_h
             ),
             use_container_width=True,
-            key="chart_sales_channel_share"
+            key="chart_sales_channel_share",
+            config=PLOTLY_CONFIG
         )
 
     with sales_col_table:
@@ -2313,7 +2344,8 @@ def render_channel_page(
             st.plotly_chart(
                 plot_pie_category(fdf, category_col=cat_column, value_col="전환매출" if db_key == "DB_매출" else "광고비", height=cur_chart_h),
                 use_container_width=True,
-                key=f"chart_pie_{db_key}"
+                key=f"chart_pie_{db_key}",
+                config=PLOTLY_CONFIG
             )
         else:
             m_grp = df_raw.groupby("월").agg({"광고비": "sum", "전환매출": "sum"}).reset_index()
@@ -2322,14 +2354,16 @@ def render_channel_page(
             st.plotly_chart(
                 plot_channel_trend_line(m_grp, metric_cols=["ROAS"], height=cur_chart_h),
                 use_container_width=True,
-                key=f"chart_roas_{db_key}"
+                key=f"chart_roas_{db_key}",
+                config=PLOTLY_CONFIG
             )
     with gc2:
         st.markdown(f"<h3>{clean_name} 월별 실적 추이</h3>", unsafe_allow_html=True)
         st.plotly_chart(
             plot_channel_trend_line(df_raw, metric_cols=["전환매출", "광고비"] if db_key != "DB_매출" else ["전환매출", "판매수량"], height=cur_chart_h),
             use_container_width=True,
-            key=f"chart_trend_{db_key}"
+            key=f"chart_trend_{db_key}",
+            config=PLOTLY_CONFIG
         )
 
     # 3. 하단 전체 상세 데이터 테이블
