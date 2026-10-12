@@ -396,7 +396,7 @@ st.markdown("""
     }
 
     /* ======================================================= */
-    /* 📱 모바일 환경 극대화 최적화 (여백 낭비 박멸 & 헤더 슬림화) */
+    /* 📱 모바일 환경 극대화 최적화 (화면의 반 이하로 헤더 압축) */
     /* ======================================================= */
     @media (max-width: 768px) {
         /* PC용 빈 공간(28px spacer) 모바일에서 완전 숨김 */
@@ -408,41 +408,123 @@ st.markdown("""
         }
         /* 메인 컨테이너 최상단 및 좌우 여백 모바일 슬림화 */
         .block-container {
-            padding-top: 12px !important;
-            padding-left: 0.8rem !important;
-            padding-right: 0.8rem !important;
+            padding-top: 8px !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
         }
         /* 모바일에서 상단바가 화면의 절반을 가리지 않도록 relative 배치 및 여백 축소 */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) {
             position: relative !important;
-            padding: 8px 12px !important;
-            box-shadow: 0 2px 8px rgba(6, 41, 27, 0.05) !important;
+            padding: 6px 8px !important;
+            margin-bottom: 6px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 6px rgba(6, 41, 27, 0.05) !important;
         }
-        /* 타이틀 및 캡션 폰트 축소 */
+        /* 타이틀 축소 및 서브캡션 완전 숨김 (헤더 높이 대폭 절약) */
         h1.main-dashboard-title {
-            font-size: 1.35rem !important;
-            line-height: 1.25 !important;
-            margin: 0 !important;
-            letter-spacing: -0.5px !important;
+            font-size: 1.12rem !important;
+            line-height: 1.2 !important;
+            margin: 0 0 2px 0 !important;
+            letter-spacing: -0.4px !important;
         }
         p.sub-caption {
-            font-size: 0.78rem !important;
-            margin: 2px 0 6px 0 !important;
+            display: none !important;
         }
-        /* 라디오 메뉴 탭 슬림화 (모바일에서 컴팩트하게 정렬) */
+
+        /* 📌 상단 컨트롤 4개 (연도, 월, 백업, 접기) 모바일 2x2 그리드 칼배치! */
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stHorizontalBlock"] {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 5px !important;
+            width: 100% !important;
+            margin: 3px 0 !important;
+        }
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            flex: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) label {
+            font-size: 0.72rem !important;
+            font-weight: 600 !important;
+            margin-bottom: 1px !important;
+            min-height: auto !important;
+            height: auto !important;
+            line-height: 1.1 !important;
+            color: #4B6356 !important;
+        }
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+            min-height: 32px !important;
+            height: 32px !important;
+            padding: 0 4px !important;
+        }
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stSelectbox"] div[data-baseweb="select"] * {
+            font-size: 0.80rem !important;
+        }
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) button {
+            min-height: 32px !important;
+            height: 32px !important;
+            font-size: 0.78rem !important;
+            padding: 0 4px !important;
+            margin: 0 !important;
+        }
+
+        /* 📌 메뉴 선택 탭 3열 2행 모던 앱 스타일 칩 버튼 */
         div[role="radiogroup"][aria-label="메뉴 선택"] {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 3px !important;
             padding: 3px !important;
-            gap: 4px !important;
-            margin-top: 0.2rem !important;
-            margin-bottom: 0.2rem !important;
+            margin-top: 4px !important;
+            margin-bottom: 2px !important;
+            background-color: #F1F5F3 !important;
+            border-radius: 8px !important;
         }
         div[role="radiogroup"][aria-label="메뉴 선택"] label {
-            padding: 6px 10px !important;
-            border-radius: 7px !important;
+            padding: 4px 1px !important;
+            margin: 0 !important;
+            min-height: 30px !important;
+            height: 30px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            box-shadow: none !important;
+        }
+        /* 라디오 원형 체크 아이콘 숨김 */
+        div[role="radiogroup"][aria-label="메뉴 선택"] label div:first-child {
+            display: none !important;
         }
         div[role="radiogroup"][aria-label="메뉴 선택"] label p {
-            font-size: 0.82rem !important;
+            font-size: 0.71rem !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            line-height: 1.15 !important;
+            letter-spacing: -0.5px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }
+
+        /* 스마트 안내 캡션 박스 숨김 (모바일 화면 대폭 절약) */
+        .smart-tab-guide-box {
+            display: none !important;
+        }
+    }
+
+    /* ======================================================= */
+    /* 📊 모든 표(DataFrame / DataEditor) 전역 오토사이즈 스타일 */
+    /* ======================================================= */
+    div[data-testid="stDataFrame"],
+    div[data-testid="stDataEditor"] {
+        width: 100% !important;
+    }
+    div[data-testid="stDataFrame"] > div,
+    div[data-testid="stDataEditor"] > div {
+        width: 100% !important;
     }
 
     /* Expander 모던 카드 스타일링 */
@@ -1175,6 +1257,7 @@ with nav_container:
             """, unsafe_allow_html=True)
 
         with top_col2:
+            st.markdown("<div class='top-controls-wrapper-anchor'></div>", unsafe_allow_html=True)
             # 우측 상단 컨트롤 바 (연도, 월, 백업, 그리고 '상단바 접기' 버튼)
             f_c1, f_c2, f_c3, f_c4 = st.columns([1.0, 1.3, 1.0, 0.9])
             with f_c1:
@@ -1278,7 +1361,7 @@ with nav_container:
         }
         t_color, t_text = tab_guides.get(selected_page, ("#00C56F", ""))
         st.markdown(f"""
-        <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px; padding: 5px 12px; background-color: #FFFFFF; border-left: 3.5px solid {t_color}; border-radius: 6px; font-size: 0.82rem; color: #4B6356; box-shadow: 0 1px 3px rgba(6,41,27,0.03);">
+        <div class="smart-tab-guide-box" style="display: flex; align-items: center; gap: 8px; margin-top: 5px; padding: 5px 12px; background-color: #FFFFFF; border-left: 3.5px solid {t_color}; border-radius: 6px; font-size: 0.82rem; color: #4B6356; box-shadow: 0 1px 3px rgba(6,41,27,0.03);">
             <span style="font-weight: 700; color: {t_color}; white-space: nowrap;">💡 {selected_page}</span>
             <span style="color: #CBD5E1;">|</span>
             <span style="color: #475569;">{t_text}</span>
@@ -1556,7 +1639,7 @@ if "통합 대시보드" in selected_page:
     ad_channels = [str(ch).strip() for ch in ad_channel_df["채널"]]
 
     col_cfg_ad = {
-        "채널": st.column_config.TextColumn("채널", width="medium"),
+        "채널": st.column_config.TextColumn("채널"),
         "광고비": st.column_config.NumberColumn("광고비", format="₩%,d"),
         "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
         "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
@@ -1686,7 +1769,7 @@ if "통합 대시보드" in selected_page:
         sales_channels = [str(ch).strip() for ch in sales_channel_df["판매 채널"] if str(ch).strip() and str(ch).strip() != "nan"]
 
         col_cfg_sales = {
-            "판매 채널": st.column_config.TextColumn("판매 채널", width="medium"),
+            "판매 채널": st.column_config.TextColumn("판매 채널"),
             "매출액": st.column_config.NumberColumn("매출액", format="₩%,d"),
             "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개"),
             "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건"),
@@ -1746,7 +1829,7 @@ if "통합 대시보드" in selected_page:
     all_monthly_df = get_monthly_trend_table(all_dbs, target_year=None)
 
     col_cfg_monthly = {
-        "월": st.column_config.TextColumn("월", width="medium"),
+        "월": st.column_config.TextColumn("월"),
         "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d"),
         "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d"),
         "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
@@ -1917,7 +2000,7 @@ if "통합 대시보드" in selected_page:
             yearly_df = yearly_df.sort_values(by="ROAS", ascending=False).reset_index(drop=True)
 
         col_cfg_yearly = {
-            "연도": st.column_config.TextColumn("연도", width="medium"),
+            "연도": st.column_config.TextColumn("연도"),
             "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d"),
             "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d"),
             "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
@@ -2231,10 +2314,10 @@ def render_channel_page(
 
         # 7) 컬럼 설정 (회계 서식 및 너비)
         col_cfg_detail = {
-            "월": st.column_config.TextColumn("월", width="small"),
-            "마케팅 분류": st.column_config.TextColumn("분류", width="small"),
-            "매출분류": st.column_config.TextColumn("판매 채널", width="medium"),
-            "캠페인 이름": st.column_config.TextColumn("캠페인명", width="medium"),
+            "월": st.column_config.TextColumn("월"),
+            "마케팅 분류": st.column_config.TextColumn("분류"),
+            "매출분류": st.column_config.TextColumn("판매 채널"),
+            "캠페인 이름": st.column_config.TextColumn("캠페인명"),
             "광고비": st.column_config.NumberColumn("광고비", format="₩%,d"),
             "전환매출": st.column_config.NumberColumn("매출액" if db_key == "DB_매출" else "전환매출", format="₩%,d"),
             "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
