@@ -1238,35 +1238,134 @@ def render_styled_accounting_table(
     st.markdown(table_container_html, unsafe_allow_html=True)
 
 
-def render_total_summary_bar(df_columns: List[str], total_row_dict: Dict[str, Any], is_selected: bool = False) -> None:
-    """st.dataframe 바로 아래에 완벽히 정렬되는 이숲 스타일 회계 합계 요약 바를 렌더링합니다."""
-    tot_bg = "#E6FBF1" if is_selected else "#F8FAFB"
-    tot_border_top = "2.5px solid #00C56F" if is_selected else "2px solid #CBD5E1"
+# ----------------------------------------------------------------------
+# 테이블 컬럼 기본 너비 정의 (st.dataframe의 small/medium 규격과 1:1 매칭)
+# ----------------------------------------------------------------------
+DEFAULT_COL_WIDTHS: Dict[str, int] = {
+    # 식별 / 텍스트 열 (약 100~130px)
+    "월": 100,
+    "연도": 100,
+    "채널": 100,
+    "마케팅 분류": 100,
+    "분류": 100,
+    "매출분류": 130,
+    "판매 채널": 130,
+    "캠페인 이름": 180,
+    "캠페인명": 180,
+    # 금액 / 대형 수치 열 (약 130~140px, medium 매칭)
+    "광고비": 140,
+    "총 광고비": 140,
+    "총광고비": 140,
+    "매출액": 140,
+    "총 매출": 140,
+    "총매출": 140,
+    "전환매출": 140,
+    "노출수": 130,
+    # 비율 및 단가 열 (약 90~105px, small 매칭)
+    "클릭수": 105,
+    "전환수": 95,
+    "판매수량": 95,
+    "배송건수": 95,
+    "배송비": 100,
+    "객단가": 100,
+    "CPA": 100,
+    "CPC": 95,
+    "ROAS": 95,
+    "CTR": 90,
+    "CVR": 90,
+}
 
-    td_list = []
-    for i, col in enumerate(df_columns):
-        align = "left" if i == 0 else "right"
-        val = total_row_dict.get(col, "-")
-        td_html = (
-            f"<td style='"
-            f"padding: 12px 14px; "
-            f"text-align: {align}; "
-            f"font-size: 0.90rem; "
-            f"font-weight: 800; "
-            f"color: #06291B; "
-            f"font-variant-numeric: tabular-nums; "
-            f"border-right: 1px solid {'#B8E4CD' if is_selected else '#E2E8F0'}; "
-            f"white-space: nowrap;'>"
-            f"{val}"
+
+def render_total_summary_bar(
+    df_columns: List[str],
+    total_row_dict: Dict[str, Any],
+    is_selected: bool = False,
+    col_widths: Optional[Dict[str, int]] = None,
+    has_checkbox: bool = True
+) -> None:
+    """
+    상단 st.dataframe의 다중 선택 체크박스 열(폭 38px) 및 각 열의 너비와 칼같이 일치하도록
+    열 라인을 맞추고, 각 셀마다 상단 항목명(라벨)을 2단으로 표기하여 가로 스크롤 시에도
+    어떤 지표의 합계인지 즉시 식별할 수 있는 고정밀 회계 합계 요약 바를 렌더링합니다.
+
+    :param df_columns: 표에 표시되는 컬럼명 순서 리스트
+    :param total_row_dict: 컬럼별 합계/평균 포맷팅 문자열 사전
+    :param is_selected: 체크박스 선택에 의한 소계 산출 여부 (선택 시 민트 그린 하이라이트)
+    :param col_widths: 컬럼별 커스텀 픽셀 너비 사전 (None일 경우 DEFAULT_COL_WIDTHS 자동 적용)
+    :param has_checkbox: st.dataframe에 체크박스 열이 존재하는지 여부 (기본 True, 폭 38px 더미 셀 생성)
+    """
+    tot_bg = "#E8F8F0" if is_selected else "#F8FAFC"
+    border_color = "#B8E4CD" if is_selected else "#E2E8F0"
+    box_border = "#00C56F" if is_selected else "#CBD5E1"
+
+    # 1) 각 컬럼 너비 계산
+    actual_widths: List[int] = []
+    width_map = col_widths or DEFAULT_COL_WIDTHS
+    for col in df_columns:
+        w = width_map.get(col, 110)
+        actual_widths.append(w)
+
+    checkbox_w = 38 if has_checkbox else 0
+    total_table_w = checkbox_w + sum(actual_widths)
+
+    # 2) colgroup 태그 생성 (브라우저 열 너비 강제 고정)
+    col_tags: List[str] = []
+    if has_checkbox:
+        col_tags.append('<col style="width: 38px; min-width: 38px; max-width: 38px;">')
+    for w in actual_widths:
+        col_tags.append(f'<col style="width: {w}px; min-width: {w}px; max-width: {w}px;">')
+    colgroup_html = f"<colgroup>{''.join(col_tags)}</colgroup>"
+
+    # 3) td 셀 목록 생성
+    td_list: List[str] = []
+
+    # 체크박스 위치 더미 셀 (상단 표의 체크박스 열과 정확히 동일한 폭 38px 일치)
+    if has_checkbox:
+        chk_icon = "✔" if is_selected else "Σ"
+        chk_color = "#00A859" if is_selected else "#94A3B8"
+        chk_td = (
+            f"<td style='width: 38px; min-width: 38px; max-width: 38px; padding: 0; "
+            f"text-align: center; vertical-align: middle; background-color: {tot_bg}; "
+            f"border-right: 1px solid {border_color};'>"
+            f"<span style='font-size: 13px; font-weight: 800; color: {chk_color};'>{chk_icon}</span>"
             f"</td>"
         )
+        td_list.append(chk_td)
+
+    for i, col in enumerate(df_columns):
+        w = actual_widths[i]
+        val = total_row_dict.get(col, "-")
+
+        if i == 0:
+            # 첫 번째 식별 열 (월/채널/연도 등 라벨 표기)
+            sub_title = "🎯 선택 합계" if is_selected else "📅 누적 합계"
+            title_color = "#00874A" if is_selected else "#64748B"
+            val_color = "#06291B" if is_selected else "#1E293B"
+            td_html = (
+                f"<td style='width: {w}px; min-width: {w}px; max-width: {w}px; padding: 10px 12px; "
+                f"text-align: left; vertical-align: middle; border-right: 1px solid {border_color}; overflow: hidden;'>"
+                f"<div style='font-size: 11px; color: {title_color}; font-weight: 700; line-height: 1.2; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{sub_title}</div>"
+                f"<div style='font-size: 13px; font-weight: 800; color: {val_color}; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' title='{val}'>{val}</div>"
+                f"</td>"
+            )
+        else:
+            # 수치/금액 열 (상단에 명확한 컬럼명 + 하단에 볼드 회계 수치 2단 표기)
+            val_color = "#06291B" if is_selected else "#0F172A"
+            td_html = (
+                f"<td style='width: {w}px; min-width: {w}px; max-width: {w}px; padding: 10px 12px; "
+                f"text-align: right; vertical-align: middle; border-right: 1px solid {border_color}; overflow: hidden;'>"
+                f"<div style='font-size: 11px; color: #64748B; font-weight: 600; line-height: 1.2; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{col}</div>"
+                f"<div style='font-size: 13.5px; font-weight: 800; color: {val_color}; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap;'>{val}</div>"
+                f"</td>"
+            )
         td_list.append(td_html)
 
     summary_html = f"""
-    <div style="width: 100%; overflow-x: auto; border: 1px solid {'#00C56F' if is_selected else '#CBD5E1'}; border-radius: 8px; background-color: {tot_bg}; margin-top: 6px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0, 197, 111, 0.05);">
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-family: 'Pretendard Variable', Pretendard, sans-serif;">
+    <div style="width: 100%; overflow-x: auto; border: 1.5px solid {box_border}; border-radius: 8px; background-color: {tot_bg}; margin-top: 4px; margin-bottom: 16px; box-shadow: {'0 2px 8px rgba(0, 197, 111, 0.12)' if is_selected else '0 1px 3px rgba(0,0,0,0.04)'}; -webkit-overflow-scrolling: touch;">
+        <table style="table-layout: fixed; width: {total_table_w}px; min-width: {total_table_w}px; border-collapse: separate; border-spacing: 0; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;">
+            {colgroup_html}
             <tbody>
-                <tr style="background-color: {tot_bg}; border-top: {tot_border_top};">
+                <tr style="background-color: {tot_bg};">
                     {''.join(td_list)}
                 </tr>
             </tbody>
@@ -1274,6 +1373,7 @@ def render_total_summary_bar(df_columns: List[str], total_row_dict: Dict[str, An
     </div>
     """
     st.markdown(summary_html, unsafe_allow_html=True)
+
 
 
 def extract_selected_channel(event_obj: Any, key_name: str, valid_channels: List[str]) -> Optional[str]:
@@ -1943,18 +2043,18 @@ if "통합 대시보드" in selected_page:
     all_monthly_df = get_monthly_trend_table(all_dbs, target_year=None)
 
     col_cfg_monthly = {
-        "월": st.column_config.TextColumn("월"),
-        "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d"),
-        "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d"),
-        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
-        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
-        "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
-        "CPC": st.column_config.NumberColumn("CPC", format="₩%,d"),
-        "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
-        "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
-        "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
-        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
-        "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
+        "월": st.column_config.TextColumn("월", width="small"),
+        "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d", width="medium"),
+        "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d", width="medium"),
+        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
+        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
+        "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
+        "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
+        "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
+        "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
+        "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
+        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
+        "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
     }
 
     with tab1:
@@ -2016,11 +2116,11 @@ if "통합 대시보드" in selected_page:
         if selected_m_idx:
             target_m_df = disp_monthly.iloc[selected_m_idx]
             sel_m_names = ", ".join([m_months_list[i] for i in selected_m_idx if i < len(m_months_list)])
-            tot_m_label = f"🎯 선택 합계 ({sel_m_names})"
+            tot_m_label = f"{len(selected_m_idx)}개 기간 ({sel_m_names})"
             is_m_selected = True
         else:
             target_m_df = disp_monthly
-            tot_m_label = "📅 전체 누적 합계" if sel_m_year_filter.startswith("전체") else f"📅 {sel_m_year_filter} 합계"
+            tot_m_label = "전체 기간" if sel_m_year_filter.startswith("전체") else f"{sel_m_year_filter}"
             is_m_selected = False
 
         tot_m_cost = float(target_m_df["총 광고비"].sum()) if not target_m_df.empty else 0.0
@@ -2080,18 +2180,18 @@ if "통합 대시보드" in selected_page:
         yearly_df = yearly_df.sort_values(by="연도", ascending=False).reset_index(drop=True)
 
         col_cfg_yearly = {
-            "연도": st.column_config.TextColumn("연도"),
-            "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d"),
-            "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d"),
-            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
-            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
-            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d"),
-            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
-            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
-            "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
-            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
-            "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
+            "연도": st.column_config.TextColumn("연도", width="small"),
+            "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d", width="medium"),
+            "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d", width="medium"),
+            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
+            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
+            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
+            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
+            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
+            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
+            "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
+            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
+            "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
         }
 
         yearly_table_event = st.dataframe(
@@ -2114,11 +2214,11 @@ if "통합 대시보드" in selected_page:
         if selected_y_idx:
             target_y_df = yearly_df.iloc[selected_y_idx]
             sel_y_names = ", ".join([y_years_list[i] for i in selected_y_idx if i < len(y_years_list)])
-            tot_y_label = f"🎯 선택 합계 ({sel_y_names})"
+            tot_y_label = f"{len(selected_y_idx)}개 연도 ({sel_y_names})"
             is_y_selected = True
         else:
             target_y_df = yearly_df
-            tot_y_label = "🏢 전체 누적 합계"
+            tot_y_label = "전체 누적"
             is_y_selected = False
 
         tot_y_cost = float(target_y_df["총 광고비"].sum()) if not target_y_df.empty else 0.0
