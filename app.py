@@ -175,12 +175,12 @@ st.markdown("""
         right: 0 !important;
         width: 100% !important;
         z-index: 999990 !important;
-        background: rgba(248, 250, 251, 0.96) !important;
+        background: linear-gradient(180deg, #F7F5FE 0%, #ECE9FD 100%) !important;
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
         border: none !important;
-        border-bottom: 1px solid #DFE7E2 !important;
-        box-shadow: 0 4px 20px rgba(6, 41, 27, 0.08) !important;
+        border-bottom: 2px solid #C4B5FD !important;
+        box-shadow: 0 4px 20px rgba(91, 32, 182, 0.10) !important;
         padding: 6px 2.0rem 6px 2.0rem !important;
         box-sizing: border-box !important;
         border-radius: 0 !important;
@@ -197,7 +197,7 @@ st.markdown("""
     /* 헤더 내부 테두리 및 패딩 초기화 & 간격 초밀착 */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) {
         border: none !important;
-        border-bottom: 1px solid #DFE7E2 !important;
+        border-bottom: 2px solid #C4B5FD !important;
         border-radius: 0 !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) > div {
@@ -210,9 +210,46 @@ st.markdown("""
         margin: 0 !important;
     }
 
+    /* 상단바 내 필터 라벨 및 텍스트 (추출된 딥 네이비) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) label p {
+        color: #1E293A !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+    }
+    /* 셀렉트박스 및 버튼 테두리 라벤더 테마 매칭 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        border: 1.5px solid #C4B5FD !important;
+        border-radius: 8px !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] * {
+        color: #1E293A !important;
+        font-weight: 600 !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-testid="stPopover"] button,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stButton > button {
+        background-color: #FFFFFF !important;
+        border: 1.5px solid #C4B5FD !important;
+        color: #1E293A !important;
+        font-weight: 700 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 1px 3px rgba(91, 32, 182, 0.05) !important;
+        transition: all 0.2s ease !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-testid="stPopover"] button:hover,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stButton > button:hover {
+        border-color: #5B20B6 !important;
+        color: #5B20B6 !important;
+        background-color: #F5F3FF !important;
+    }
+
     /* ======================================================= */
-    /* 🌿 라디오 원형 점(circle)만 핀포인트 제거 (텍스트 100% 보존!) */
+    /* 🌿 라디오 원형 점(circle) 완벽 제거 (React-Aria & BaseWeb 대응) */
     /* ======================================================= */
+    div[data-testid="stRadio"] div[class*="e1dm8mpf4"],
+    div[role="radiogroup"] label div[class*="e1dm8mpf4"],
+    div[data-testid="stRadio"] label > span:has(input[type="radio"]),
+    div[role="radiogroup"] label > span:has(input[type="radio"]),
     div[data-testid="stRadio"] input[type="radio"] + div,
     div[role="radiogroup"] input[type="radio"] + div,
     div[data-testid="stRadio"] [data-baseweb="radio"] input[type="radio"] + div,
@@ -250,21 +287,21 @@ st.markdown("""
     }
 
     /* ======================================================= */
-    /* 🎨 상단 수평 네비게이션 탭 바 & 각 탭별 고유 브랜드 색상   */
+    /* 🎨 상단 수평 네비게이션 탭 바 (추출된 라벤더 & 딥 바이올렛 테마) */
     /* ======================================================= */
     div[role="radiogroup"][aria-label="메뉴 선택"],
     div[data-testid="stRadio"]:first-child > div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: wrap !important;
-        background-color: #EEF3F0 !important;
+        background-color: #DFD9F9 !important;
         padding: 5px 6px !important;
         border-radius: 12px !important;
         gap: 6px !important;
         margin-top: 0.3rem !important;
         margin-bottom: 0.6rem !important;
-        border: 1px solid #DFE7E2 !important;
-        box-shadow: inset 0 1px 2px rgba(6, 41, 27, 0.04) !important;
+        border: 1.5px solid #C4B5FD !important;
+        box-shadow: inset 0 1px 3px rgba(91, 32, 182, 0.08) !important;
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label {
         background-color: #FFFFFF !important;
@@ -273,36 +310,53 @@ st.markdown("""
         margin: 0 !important;
         cursor: pointer !important;
         transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        border: 1.5px solid #E2E8F0 !important;
-        box-shadow: 0 1px 3px rgba(6, 41, 27, 0.04) !important;
+        border: 1.5px solid #D4CEF5 !important;
+        box-shadow: 0 1px 3px rgba(91, 32, 182, 0.05) !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label p {
         font-size: 0.98rem !important;
-        font-weight: 600 !important;
-        color: #4B6356 !important;
+        font-weight: 700 !important;
+        color: #5B20B6 !important;
         letter-spacing: -0.2px !important;
         margin: 0 !important;
         display: block !important;
         visibility: visible !important;
     }
+    div[role="radiogroup"][aria-label="메뉴 선택"] label:hover {
+        background-color: #F5F3FF !important;
+        border-color: #7C3AED !important;
+        transform: translateY(-1px) !important;
+    }
+    /* 선택된 활성 탭 기본 스타일 */
+    div[role="radiogroup"][aria-label="메뉴 선택"] label[data-selected],
+    div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input:checked) {
+        background: linear-gradient(135deg, #1E293A 0%, #312E81 100%) !important;
+        border-color: #1E293A !important;
+        box-shadow: 0 3px 12px rgba(30, 41, 58, 0.35) !important;
+    }
+    div[role="radiogroup"][aria-label="메뉴 선택"] label[data-selected] p,
+    div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input:checked) p {
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+    }
 
-    /* 1. 🏠 통합 대시보드 (이숲 에메랄드) */
+    /* 1. 🏠 통합 대시보드 (자료의 초도비 딥 네이비) */
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="통합 대시보드"]):hover {
-        border-color: #00C56F !important;
-        background-color: #F0FDF4 !important;
+        border-color: #1E293A !important;
+        background-color: #F5F3FF !important;
         transform: translateY(-1px) !important;
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="통합 대시보드"]:checked) {
-        background: linear-gradient(135deg, #00D87B 0%, #00A35C 100%) !important;
-        border-color: #00A35C !important;
-        box-shadow: 0 3px 12px rgba(0, 197, 111, 0.35) !important;
+        background: linear-gradient(135deg, #1E293A 0%, #312E81 100%) !important;
+        border-color: #1E293A !important;
+        box-shadow: 0 3px 12px rgba(30, 41, 58, 0.4) !important;
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="통합 대시보드"]:checked) p {
         color: #FFFFFF !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
     }
 
     /* 2. 💚 네이버 광고 (네이버 그린) */
@@ -318,7 +372,7 @@ st.markdown("""
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="네이버"]:checked) p {
         color: #FFFFFF !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
     }
 
     /* 3. 🚀 쿠팡 광고 (쿠팡 스칼렛 레드) */
@@ -334,7 +388,7 @@ st.markdown("""
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="쿠팡"]:checked) p {
         color: #FFFFFF !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
     }
 
     /* 4. 🔵 메타 광고 (메타 로열 블루) */
@@ -350,7 +404,7 @@ st.markdown("""
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="메타"]:checked) p {
         color: #FFFFFF !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
     }
 
     /* 5. 💰 전체 매출 (골드 앰버) */
@@ -366,7 +420,7 @@ st.markdown("""
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="전체 매출"]:checked) p {
         color: #FFFFFF !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
     }
 
     /* 6. 🛠️ 데이터 관리 (슬레이트 퍼플) */
@@ -376,19 +430,20 @@ st.markdown("""
         transform: translateY(-1px) !important;
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="데이터 관리"]:checked) {
-        background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%) !important;
-        border-color: #6D28D9 !important;
-        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.35) !important;
+        background: linear-gradient(135deg, #5B20B6 0%, #4338CA 100%) !important;
+        border-color: #4338CA !important;
+        box-shadow: 0 3px 12px rgba(91, 32, 182, 0.35) !important;
     }
     div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="데이터 관리"]:checked) p {
         color: #FFFFFF !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
     }
 
     /* ======================================================= */
-    /* 📱 슬림(접힌) 모드 상단바 및 우측 펼치기 버튼 컴팩트 정렬 */
+    /* 📱 슬림(접힌) 모드 상단바 및 우측 펼치기/접기 버튼 컴팩트 정렬 */
     /* ======================================================= */
-    div[data-testid="stColumn"] div.stButton > button[key="btn_expand_nav"] {
+    div[data-testid="stColumn"] div.stButton > button[key="btn_expand_nav"],
+    div[data-testid="stColumn"] div.stButton > button[key="btn_collapse_nav"] {
         height: 36px !important;
         min-height: 36px !important;
         max-height: 36px !important;
@@ -398,15 +453,16 @@ st.markdown("""
         margin: 0 !important;
         padding: 0 12px !important;
         background-color: #FFFFFF !important;
-        border: 1px solid #DFE7E2 !important;
-        color: #06291B !important;
-        box-shadow: 0 1px 3px rgba(6, 41, 27, 0.04) !important;
+        border: 1.5px solid #C4B5FD !important;
+        color: #1E293A !important;
+        box-shadow: 0 1px 3px rgba(91, 32, 182, 0.05) !important;
         transition: all 0.2s ease !important;
     }
-    div[data-testid="stColumn"] div.stButton > button[key="btn_expand_nav"]:hover {
-        border-color: #00C56F !important;
-        color: #00A35C !important;
-        background-color: #F0FDF4 !important;
+    div[data-testid="stColumn"] div.stButton > button[key="btn_expand_nav"]:hover,
+    div[data-testid="stColumn"] div.stButton > button[key="btn_collapse_nav"]:hover {
+        border-color: #5B20B6 !important;
+        color: #5B20B6 !important;
+        background-color: #F5F3FF !important;
     }
 
     /* ======================================================= */
@@ -426,13 +482,15 @@ st.markdown("""
             padding-left: 0.4rem !important;
             padding-right: 0.4rem !important;
         }
-        /* 모바일에서 상단바가 화면의 절반을 가리지 않도록 relative 배치 및 상하 여백 극소화 */
+        /* 모바일에서 상단바가 화면의 절반을 가리지 않도록 relative 배치 및 라벤더 테마 적용 */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) {
             position: relative !important;
-            padding: 4px 6px !important;
-            margin-bottom: 4px !important;
-            border-radius: 8px !important;
-            box-shadow: 0 1px 4px rgba(6, 41, 27, 0.04) !important;
+            padding: 5px 8px !important;
+            margin-bottom: 6px !important;
+            background: linear-gradient(180deg, #F7F5FE 0%, #ECE9FD 100%) !important;
+            border: 1.5px solid #C4B5FD !important;
+            border-radius: 10px !important;
+            box-shadow: 0 2px 8px rgba(91, 32, 182, 0.08) !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stVerticalBlock"] {
             gap: 2px !important;
@@ -1481,10 +1539,10 @@ with nav_container:
 
         with top_col1:
             st.markdown("""
-            <h1 class='main-dashboard-title' style='font-size: 1.95rem !important; font-weight: 800 !important; color: #06291B !important; margin: 0 !important; line-height: 1.15 !important; letter-spacing: -0.6px !important; display: block !important;'>
+            <h1 class='main-dashboard-title' style='font-size: 1.95rem !important; font-weight: 800 !important; color: #1E293A !important; margin: 0 !important; line-height: 1.15 !important; letter-spacing: -0.6px !important; display: block !important;'>
                 📈 마케팅 통합 성과 대시보드
             </h1>
-            <p class='sub-caption' style='margin: 1px 0 0 0 !important; font-size: 0.88rem !important; line-height: 1.2 !important;'>
+            <p class='sub-caption' style='margin: 1px 0 0 0 !important; font-size: 0.88rem !important; line-height: 1.2 !important; color: #5B20B6 !important; font-weight: 600 !important;'>
                 마케팅 종합 성과 & 네이버·쿠팡·메타 원본 보고서 자동 연동 시스템
             </p>
             """, unsafe_allow_html=True)
@@ -1612,7 +1670,7 @@ with nav_container:
         )
         st.session_state["current_page"] = selected_page
 
-        # 각 탭 및 반영 방식 마우스 오버 툴팁(Tooltip) 주입 스크립트
+        # 각 탭 및 반영 방식 마우스 오버 툴팁(Tooltip) & 탭 활성화 테마 스크립트
         st.markdown("""
         <script>
         const navTooltips = {
@@ -1625,9 +1683,23 @@ with nav_container:
             "덮어쓰기": "해당 귀속 연월의 기존 데이터를 교체합니다",
             "누적 추가": "기존 데이터를 보존하고 새 데이터를 누적으로 추가합니다"
         };
-        function injectNavTooltips() {
+        const tabActiveColors = {
+            "통합 대시보드": "linear-gradient(135deg, #1E293A 0%, #312E81 100%)",
+            "네이버": "linear-gradient(135deg, #03C75A 0%, #029E47 100%)",
+            "쿠팡": "linear-gradient(135deg, #FF334B 0%, #E01A33 100%)",
+            "메타": "linear-gradient(135deg, #0084FF 0%, #0066CC 100%)",
+            "전체 매출": "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+            "데이터 관리": "linear-gradient(135deg, #5B20B6 0%, #4338CA 100%)"
+        };
+
+        function styleNavAndTooltips() {
             try {
-                const labels = window.parent.document.querySelectorAll('div[data-testid="stRadio"] label');
+                // 1. 라디오 원형 점(circle) 완벽 은폐
+                const circles = window.parent.document.querySelectorAll('div[data-testid="stRadio"] div[class*="e1dm8mpf4"], div[data-testid="stRadio"] label > span:has(input)');
+                circles.forEach(c => { c.style.display = 'none'; });
+
+                // 2. 각 탭 레이블 스타일링 및 툴팁 부여
+                const labels = window.parent.document.querySelectorAll('div[role="radiogroup"][aria-label="메뉴 선택"] label');
                 labels.forEach(lbl => {
                     const txt = (lbl.innerText || '').trim();
                     for (const [k, v] of Object.entries(navTooltips)) {
@@ -1635,8 +1707,36 @@ with nav_container:
                             lbl.setAttribute('title', v);
                         }
                     }
+
+                    const isChecked = lbl.hasAttribute('data-selected') || lbl.querySelector('input:checked');
+                    const p = lbl.querySelector('p');
+
+                    if (isChecked) {
+                        lbl.setAttribute('data-state', 'active');
+                        let matchedBg = 'linear-gradient(135deg, #1E293A 0%, #312E81 100%)';
+                        for (const [k, grad] of Object.entries(tabActiveColors)) {
+                            if (txt.includes(k)) { matchedBg = grad; break; }
+                        }
+                        lbl.style.background = matchedBg;
+                        lbl.style.borderColor = 'transparent';
+                        lbl.style.boxShadow = '0 3px 12px rgba(30, 41, 58, 0.35)';
+                        if (p) {
+                            p.style.color = '#FFFFFF';
+                            p.style.fontWeight = '800';
+                        }
+                    } else {
+                        lbl.setAttribute('data-state', 'inactive');
+                        lbl.style.background = '#FFFFFF';
+                        lbl.style.borderColor = '#D4CEF5';
+                        lbl.style.boxShadow = '0 1px 3px rgba(91, 32, 182, 0.05)';
+                        if (p) {
+                            p.style.color = '#5B20B6';
+                            p.style.fontWeight = '700';
+                        }
+                    }
                 });
-                // 모바일 환경일 때 1행: 통합/매출/관리, 2행: 네이버/쿠팡/메타 순서 재배치 강제 적용 (오직 메뉴 선택에만!)
+
+                // 모바일 환경일 때 1행: 통합/매출/관리, 2행: 네이버/쿠팡/메타 순서 재배치 강제 적용
                 if (window.innerWidth <= 768) {
                     const group = window.parent.document.querySelector('div[role="radiogroup"][aria-label="메뉴 선택"]');
                     if (group) {
@@ -1653,24 +1753,25 @@ with nav_container:
                 }
             } catch(e) {}
         }
-        setTimeout(injectNavTooltips, 300);
-        setTimeout(injectNavTooltips, 800);
-        setTimeout(injectNavTooltips, 1500);
+        styleNavAndTooltips();
+        setTimeout(styleNavAndTooltips, 100);
+        setTimeout(styleNavAndTooltips, 400);
+        setTimeout(styleNavAndTooltips, 1000);
         </script>
         """, unsafe_allow_html=True)
 
         # 현재 선택된 탭 스마트 안내 캡션 (색상 포인트 & 미니 가이드)
         tab_guides = {
-            "🏠 통합 대시보드": ("#00C56F", "전체 마케팅 종합 성과 요약, KPI 카드, 월별 추이 및 채널별 광고·매출 성과를 한눈에 파악합니다."),
+            "🏠 통합 대시보드": ("#1E293A", "전체 마케팅 종합 성과 요약, KPI 카드, 월별 추이 및 채널별 광고·매출 성과를 한눈에 파악합니다."),
             "🟩 네이버 광고": ("#03C75A", "네이버 검색광고 및 성과형 디스플레이(GFA)의 광고비, 노출수, 클릭수, 전환 성과를 상세 분석합니다."),
             "🚀 쿠팡 광고": ("#FF334B", "쿠팡 매출성장광고 및 검색광고 집행 데이터와 광고 기여 매출액을 상세 분석합니다."),
             "♾️ 메타 광고": ("#0084FF", "페이스북 및 인스타그램 스폰서드 캠페인별 광고비, 클릭수, 전환매출 지표를 확인합니다."),
             "💰 전체 매출": ("#F59E0B", "스마트스토어, 쿠팡, 자사몰, 오픈마켓 등 전체 판매채널별 매출액과 주문 실적을 집계합니다."),
-            "🛠️ 데이터 관리": ("#7C3AED", "업로드된 원본 DB를 엑셀 표 형태로 직접 수정하거나 특정 기간의 데이터를 안전하게 백업/삭제합니다.")
+            "🛠️ 데이터 관리": ("#5B20B6", "업로드된 원본 DB를 엑셀 표 형태로 직접 수정하거나 특정 기간의 데이터를 안전하게 백업/삭제합니다.")
         }
-        t_color, t_text = tab_guides.get(selected_page, ("#00C56F", ""))
+        t_color, t_text = tab_guides.get(selected_page, ("#1E293A", ""))
         st.markdown(f"""
-        <div class="smart-tab-guide-box" style="display: flex; align-items: center; gap: 8px; margin-top: 5px; padding: 5px 12px; background-color: #FFFFFF; border-left: 3.5px solid {t_color}; border-radius: 6px; font-size: 0.82rem; color: #4B6356; box-shadow: 0 1px 3px rgba(6,41,27,0.03);">
+        <div class="smart-tab-guide-box" style="display: flex; align-items: center; gap: 8px; margin-top: 5px; padding: 5px 12px; background-color: #FFFFFF; border: 1px solid #D4CEF5; border-left: 3.5px solid {t_color}; border-radius: 6px; font-size: 0.82rem; color: #334155; box-shadow: 0 1px 3px rgba(91,32,182,0.05);">
             <span style="font-weight: 700; color: {t_color}; white-space: nowrap;">💡 {selected_page}</span>
             <span style="color: #CBD5E1;">|</span>
             <span style="color: #475569;">{t_text}</span>
@@ -1694,8 +1795,8 @@ with nav_container:
         with slim_c1:
             st.markdown(f"""
             <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 1px 0;">
-                <span style="font-weight: 800; font-size: 1.08rem; color: #06291B; white-space: nowrap;">📈 {st.session_state['current_page']}</span>
-                <span style="background-color: #EEF3F0; color: #06291B; padding: 3px 8px; border-radius: 6px; font-size: 0.80rem; font-weight: 600; border: 1px solid #DFE7E2; white-space: nowrap;">
+                <span style="font-weight: 800; font-size: 1.08rem; color: #1E293A; white-space: nowrap;">📈 {st.session_state['current_page']}</span>
+                <span style="background-color: #EAD1DC; color: #5B20B6; padding: 3px 9px; border-radius: 6px; font-size: 0.80rem; font-weight: 700; border: 1px solid #C4B5FD; white-space: nowrap;">
                     📅 {badge_period_text}
                 </span>
             </div>
