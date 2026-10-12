@@ -395,6 +395,56 @@ st.markdown("""
         background-color: #F0FDF4 !important;
     }
 
+    /* ======================================================= */
+    /* 📱 모바일 환경 극대화 최적화 (여백 낭비 박멸 & 헤더 슬림화) */
+    /* ======================================================= */
+    @media (max-width: 768px) {
+        /* PC용 빈 공간(28px spacer) 모바일에서 완전 숨김 */
+        .pc-spacer {
+            display: none !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* 메인 컨테이너 최상단 및 좌우 여백 모바일 슬림화 */
+        .block-container {
+            padding-top: 12px !important;
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+        }
+        /* 모바일에서 상단바가 화면의 절반을 가리지 않도록 relative 배치 및 여백 축소 */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) {
+            position: relative !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 2px 8px rgba(6, 41, 27, 0.05) !important;
+        }
+        /* 타이틀 및 캡션 폰트 축소 */
+        h1.main-dashboard-title {
+            font-size: 1.35rem !important;
+            line-height: 1.25 !important;
+            margin: 0 !important;
+            letter-spacing: -0.5px !important;
+        }
+        p.sub-caption {
+            font-size: 0.78rem !important;
+            margin: 2px 0 6px 0 !important;
+        }
+        /* 라디오 메뉴 탭 슬림화 (모바일에서 컴팩트하게 정렬) */
+        div[role="radiogroup"][aria-label="메뉴 선택"] {
+            padding: 3px !important;
+            gap: 4px !important;
+            margin-top: 0.2rem !important;
+            margin-bottom: 0.2rem !important;
+        }
+        div[role="radiogroup"][aria-label="메뉴 선택"] label {
+            padding: 6px 10px !important;
+            border-radius: 7px !important;
+        }
+        div[role="radiogroup"][aria-label="메뉴 선택"] label p {
+            font-size: 0.82rem !important;
+        }
+    }
+
     /* Expander 모던 카드 스타일링 */
     div[data-testid="stExpander"] {
         background-color: #ffffff !important;
@@ -572,6 +622,19 @@ st.markdown("""
     div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"]:hover {
         border-color: #00C56F !important;
         background-color: #F6FCF9 !important;
+    }
+    /* 파일 드롭존 하단 200MB 안내 텍스트 숨김 (업로드 버튼 옆으로 이전) */
+    div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] small,
+    div[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"] small {
+        display: none !important;
+    }
+    /* 업로드 버튼 옆에 연하고 작은 글씨로 (최대 200MB) 표시 */
+    div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] button::after {
+        content: " (최대 200MB)";
+        font-size: 0.74rem !important;
+        color: #94A3B8 !important;
+        font-weight: 400 !important;
+        margin-left: 6px !important;
     }
 
     /* 2행 데이터 즉시 적용 버튼: 이숲 시그니처 에메랄드 그라데이션 & 글씨 순백색(#ffffff) 강제 적용 */
@@ -1086,11 +1149,10 @@ page_options: List[str] = [
 if "current_page" not in st.session_state or st.session_state["current_page"] not in page_options:
     st.session_state["current_page"] = page_options[0]
 
-month_options: List[str] = ["전체 (연간 누적)"] + available_months
-if "selected_year_val" not in st.session_state:
-    st.session_state["selected_year_val"] = available_years[0] if available_years else 2027
+if "selected_year_val" not in st.session_state or st.session_state["selected_year_val"] not in available_years:
+    st.session_state["selected_year_val"] = available_years[0] if available_years else 2026
 if "selected_month_raw_val" not in st.session_state:
-    st.session_state["selected_month_raw_val"] = month_options[0]
+    st.session_state["selected_month_raw_val"] = "전체 (연간 누적)"
 
 # 📌 화면 상단 영구 고정 반응형 스마트 네비게이션 래퍼 컨테이너 (border=True로 DOM 독립성 확보)
 nav_container = st.container(border=True)
@@ -1116,16 +1178,39 @@ with nav_container:
             # 우측 상단 컨트롤 바 (연도, 월, 백업, 그리고 '상단바 접기' 버튼)
             f_c1, f_c2, f_c3, f_c4 = st.columns([1.0, 1.3, 1.0, 0.9])
             with f_c1:
-                cur_y_idx = available_years.index(st.session_state["selected_year_val"]) if st.session_state["selected_year_val"] in available_years else 0
+                cur_y = st.session_state["selected_year_val"]
+                cur_y_idx = available_years.index(cur_y) if cur_y in available_years else 0
                 selected_year = st.selectbox("기준 연도", available_years, index=cur_y_idx, key="sb_year_ctl")
-                st.session_state["selected_year_val"] = selected_year
+                if selected_year != st.session_state["selected_year_val"]:
+                    st.session_state["selected_year_val"] = selected_year
+                    st.session_state["selected_month_raw_val"] = "전체 (연간 누적)"
+                    if "sb_month_ctl" in st.session_state:
+                        st.session_state["sb_month_ctl"] = "전체 (연간 누적)"
+                    st.rerun()
+
             with f_c2:
-                cur_m_idx = month_options.index(st.session_state["selected_month_raw_val"]) if st.session_state["selected_month_raw_val"] in month_options else 0
+                # 선택된 연도에 속하는 월만 동적으로 추출 (2026 선택 시 2027 월 절대 노출 금지!)
+                cur_y_str = str(st.session_state["selected_year_val"])
+                months_for_cur_year = [m for m in available_months if str(m).startswith(f"{cur_y_str}-")]
+                if not months_for_cur_year:
+                    months_for_cur_year = [f"{cur_y_str}-{m:02d}" for m in range(1, 13)]
+                month_options = ["전체 (연간 누적)"] + months_for_cur_year
+
+                # 세션에 저장된 월 값이 현재 연도에 맞지 않으면 즉시 '전체 (연간 누적)'으로 자동 보정
+                cur_m_val = st.session_state.get("selected_month_raw_val", month_options[0])
+                if cur_m_val not in month_options:
+                    cur_m_val = month_options[0]
+                    st.session_state["selected_month_raw_val"] = cur_m_val
+                    if "sb_month_ctl" in st.session_state:
+                        st.session_state["sb_month_ctl"] = cur_m_val
+
+                cur_m_idx = month_options.index(cur_m_val)
                 selected_month_raw = st.selectbox("기준 월", month_options, index=cur_m_idx, key="sb_month_ctl")
                 st.session_state["selected_month_raw_val"] = selected_month_raw
                 selected_month: Optional[str] = None if selected_month_raw.startswith("전체") else selected_month_raw
+
             with f_c3:
-                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+                st.markdown("<div class='pc-spacer' style='height: 28px;'></div>", unsafe_allow_html=True)
                 excel_backup = export_all_to_excel()
                 st.download_button(
                     label="💾 백업",
@@ -1135,7 +1220,7 @@ with nav_container:
                     use_container_width=True
                 )
             with f_c4:
-                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+                st.markdown("<div class='pc-spacer' style='height: 28px;'></div>", unsafe_allow_html=True)
                 if st.button("🔼 접기", key="btn_collapse_nav", use_container_width=True, help="상단바를 접어 화면을 더 넓게 봅니다"):
                     st.session_state["show_top_navbar"] = False
                     st.rerun()
@@ -1202,13 +1287,24 @@ with nav_container:
 
     else:
         # [B] 접힌 초슬림 플로팅 바 모드 (모바일 100% 최적화: 불필요한 버튼 창 완전 제거, 단 1줄 컴팩트 바)
+        cur_y_val = st.session_state['selected_year_val']
+        cur_m_val = st.session_state.get('selected_month_raw_val', '')
+        if cur_m_val and not cur_m_val.startswith("전체") and cur_m_val.startswith(f"{cur_y_val}-"):
+            try:
+                p_parts = cur_m_val.split("-")
+                badge_period_text = f"{cur_y_val}년 {int(p_parts[1])}월"
+            except Exception:
+                badge_period_text = f"{cur_y_val}년 {cur_m_val}"
+        else:
+            badge_period_text = f"{cur_y_val}년 전체 (누적)"
+
         slim_c1, slim_c2 = st.columns([3.8, 1.4])
         with slim_c1:
             st.markdown(f"""
             <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 1px 0;">
                 <span style="font-weight: 800; font-size: 1.08rem; color: #06291B; white-space: nowrap;">📈 {st.session_state['current_page']}</span>
                 <span style="background-color: #EEF3F0; color: #06291B; padding: 3px 8px; border-radius: 6px; font-size: 0.80rem; font-weight: 600; border: 1px solid #DFE7E2; white-space: nowrap;">
-                    📅 {st.session_state['selected_year_val']}년 {st.session_state['selected_month_raw_val']}
+                    📅 {badge_period_text}
                 </span>
             </div>
             """, unsafe_allow_html=True)
@@ -1219,21 +1315,19 @@ with nav_container:
 
         selected_page = st.session_state["current_page"]
         selected_year = st.session_state["selected_year_val"]
-        selected_month_raw = st.session_state["selected_month_raw_val"]
-        selected_month = None if selected_month_raw.startswith("전체") else selected_month_raw
+        selected_month_raw = st.session_state.get("selected_month_raw_val", "전체 (연간 누적)")
+        selected_month = selected_month_raw if (selected_month_raw and not selected_month_raw.startswith("전체") and selected_month_raw.startswith(f"{selected_year}-")) else None
 
 
 # 전역 기준 기간 텍스트 공통 산출 (모든 페이지 공통 참조)
-if selected_month:
+if selected_month and selected_month.startswith(f"{selected_year}-"):
     try:
         p_parts = selected_month.split("-")
-        p_year = p_parts[0]
-        p_month = int(p_parts[1])
-        period_title = f"{p_year}년 {p_month}월"
+        period_title = f"{selected_year}년 {int(p_parts[1])}월"
     except Exception:
         period_title = f"{selected_year}년 {selected_month}"
 else:
-    period_title = f"{selected_year}년 전체 기간"
+    period_title = f"{selected_year}년 전체 (누적)"
 
 
 # ====================================================
@@ -1271,7 +1365,7 @@ if "통합 대시보드" in selected_page:
             selected_db_type = db_key_mapping[selected_choice]
 
         with opt_c2:
-            default_m_str = selected_month if selected_month else (available_months[0] if available_months else "2026-10")
+            default_m_str = selected_month if (selected_month and selected_month.startswith(f"{selected_year}-")) else f"{selected_year}-01"
             input_period = st.text_input("귀속 연월 (YYYY-MM)", value=default_m_str)
             try:
                 p_parts = input_period.strip().split("-")
@@ -1279,7 +1373,7 @@ if "통합 대시보드" in selected_page:
                 attr_month = f"{p_parts[0]}-{p_parts[1].zfill(2)}"
             except Exception:
                 attr_year = selected_year
-                attr_month = "2026-10"
+                attr_month = f"{selected_year}-01"
 
         with opt_c3:
             import_mode_choice = st.radio("반영 방식", ["🔄 덮어쓰기", "➕ 누적 추가"], index=1, horizontal=True)
