@@ -1242,33 +1242,33 @@ def render_styled_accounting_table(
 # 테이블 컬럼 기본 너비 정의 (st.dataframe의 small/medium 규격과 1:1 매칭)
 # ----------------------------------------------------------------------
 DEFAULT_COL_WIDTHS: Dict[str, int] = {
-    # 식별 / 텍스트 열 (약 100~130px)
+    # 식별 / 텍스트 열 (약 100~140px)
     "월": 100,
     "연도": 100,
-    "채널": 100,
+    "채널": 110,
     "마케팅 분류": 100,
     "분류": 100,
     "매출분류": 130,
-    "판매 채널": 130,
+    "판매 채널": 140,
     "캠페인 이름": 180,
     "캠페인명": 180,
-    # 금액 / 대형 수치 열 (약 130~140px, medium 매칭)
+    # 금액 / 대형 수치 열 (약 130~150px, medium 매칭)
     "광고비": 140,
     "총 광고비": 140,
     "총광고비": 140,
-    "매출액": 140,
-    "총 매출": 140,
-    "총매출": 140,
+    "매출액": 150,
+    "총 매출": 150,
+    "총매출": 150,
     "전환매출": 140,
     "노출수": 130,
-    # 비율 및 단가 열 (약 90~105px, small 매칭)
+    "배송비": 140,  # 억 단위 금액까지 절대 잘리지 않도록 충분한 너비 확보
+    # 비율 및 단가 열 (약 95~120px, small/medium 매칭)
     "클릭수": 105,
-    "전환수": 95,
-    "판매수량": 95,
-    "배송건수": 95,
-    "배송비": 100,
-    "객단가": 100,
-    "CPA": 100,
+    "전환수": 100,
+    "판매수량": 110,
+    "배송건수": 110,
+    "객단가": 120,
+    "CPA": 105,
     "CPC": 95,
     "ROAS": 95,
     "CTR": 90,
@@ -1308,12 +1308,12 @@ def render_total_summary_bar(
     checkbox_w = 38 if has_checkbox else 0
     total_table_w = checkbox_w + sum(actual_widths)
 
-    # 2) colgroup 태그 생성 (브라우저 열 너비 강제 고정)
+    # 2) colgroup 태그 생성 (브라우저 열 너비 비례 고정)
     col_tags: List[str] = []
     if has_checkbox:
         col_tags.append('<col style="width: 38px; min-width: 38px; max-width: 38px;">')
     for w in actual_widths:
-        col_tags.append(f'<col style="width: {w}px; min-width: {w}px; max-width: {w}px;">')
+        col_tags.append(f'<col style="width: {w}px; min-width: {w}px;">')
     colgroup_html = f"<colgroup>{''.join(col_tags)}</colgroup>"
 
     # 3) td 셀 목록 생성
@@ -1342,27 +1342,27 @@ def render_total_summary_bar(
             title_color = "#00874A" if is_selected else "#64748B"
             val_color = "#06291B" if is_selected else "#1E293B"
             td_html = (
-                f"<td style='width: {w}px; min-width: {w}px; max-width: {w}px; padding: 10px 12px; "
+                f"<td style='min-width: {w}px; padding: 8px 10px; "
                 f"text-align: left; vertical-align: middle; border-right: 1px solid {border_color}; overflow: hidden;'>"
                 f"<div style='font-size: 11px; color: {title_color}; font-weight: 700; line-height: 1.2; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{sub_title}</div>"
                 f"<div style='font-size: 13px; font-weight: 800; color: {val_color}; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' title='{val}'>{val}</div>"
                 f"</td>"
             )
         else:
-            # 수치/금액 열 (상단에 명확한 컬럼명 + 하단에 볼드 회계 수치 2단 표기)
+            # 수치/금액 열 (상단에 명확한 컬럼명 + 하단에 볼드 회계 수치 2단 표기, 금액 잘림 방지 넉넉한 너비 및 패딩)
             val_color = "#06291B" if is_selected else "#0F172A"
             td_html = (
-                f"<td style='width: {w}px; min-width: {w}px; max-width: {w}px; padding: 10px 12px; "
+                f"<td style='min-width: {w}px; padding: 8px 10px; "
                 f"text-align: right; vertical-align: middle; border-right: 1px solid {border_color}; overflow: hidden;'>"
                 f"<div style='font-size: 11px; color: #64748B; font-weight: 600; line-height: 1.2; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{col}</div>"
-                f"<div style='font-size: 13.5px; font-weight: 800; color: {val_color}; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap;'>{val}</div>"
+                f"<div style='font-size: 13px; font-weight: 800; color: {val_color}; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap;'>{val}</div>"
                 f"</td>"
             )
         td_list.append(td_html)
 
     summary_html = f"""
     <div style="width: 100%; overflow-x: auto; border: 1.5px solid {box_border}; border-radius: 8px; background-color: {tot_bg}; margin-top: 4px; margin-bottom: 16px; box-shadow: {'0 2px 8px rgba(0, 197, 111, 0.12)' if is_selected else '0 1px 3px rgba(0,0,0,0.04)'}; -webkit-overflow-scrolling: touch;">
-        <table style="table-layout: fixed; width: {total_table_w}px; min-width: {total_table_w}px; border-collapse: separate; border-spacing: 0; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;">
+        <table style="table-layout: fixed; width: 100%; min-width: {total_table_w}px; border-collapse: separate; border-spacing: 0; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;">
             {colgroup_html}
             <tbody>
                 <tr style="background-color: {tot_bg};">
@@ -1987,7 +1987,7 @@ if "통합 대시보드" in selected_page:
             "매출액": st.column_config.NumberColumn("매출액", format="₩%,d", width="medium"),
             "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개", width="small"),
             "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건", width="small"),
-            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d", width="small"),
+            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d", width="medium"),
             "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
         }
 
