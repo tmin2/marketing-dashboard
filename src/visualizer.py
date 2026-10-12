@@ -251,6 +251,7 @@ def plot_monthly_revenue_and_cost(
         for tr in fig.data:
             if isinstance(tr, go.Bar):
                 tr_color = tr.marker.color if hasattr(tr, "marker") and hasattr(tr.marker, "color") else "#00C56F"
+                y_axis_val = tr.yaxis if hasattr(tr, "yaxis") and tr.yaxis else "y"
                 new_traces.append(
                     go.Scatter(
                         x=tr.x,
@@ -261,17 +262,19 @@ def plot_monthly_revenue_and_cost(
                         marker=dict(size=7),
                         customdata=tr.customdata,
                         hovertemplate=tr.hovertemplate,
-                        yaxis=getattr(tr, "yaxis", "y")
+                        yaxis=y_axis_val
                     )
                 )
             else:
                 new_traces.append(tr)
-        fig.data = new_traces
+        old_layout = fig.layout
+        fig = go.Figure(data=new_traces, layout=old_layout)
     elif "영역" in c_type_str or "area" in c_type_str:
         new_traces = []
         for tr in fig.data:
             if isinstance(tr, go.Bar):
                 tr_color = tr.marker.color if hasattr(tr, "marker") and hasattr(tr.marker, "color") else "#00C56F"
+                y_axis_val = tr.yaxis if hasattr(tr, "yaxis") and tr.yaxis else "y"
                 new_traces.append(
                     go.Scatter(
                         x=tr.x,
@@ -282,12 +285,13 @@ def plot_monthly_revenue_and_cost(
                         line=dict(width=2, color=tr_color),
                         customdata=tr.customdata,
                         hovertemplate=tr.hovertemplate,
-                        yaxis=getattr(tr, "yaxis", "y")
+                        yaxis=y_axis_val
                     )
                 )
             else:
                 new_traces.append(tr)
-        fig.data = new_traces
+        old_layout = fig.layout
+        fig = go.Figure(data=new_traces, layout=old_layout)
 
     fig.update_layout(
         height=height,
