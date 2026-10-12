@@ -999,13 +999,12 @@ def format_accounting(
     회계 처리 서식 변환 함수:
     - 0 또는 빈값 -> '-' (대시 처리)
     - 양수/음수 -> 천 단위 콤마(,) 적용 (예: 1,404,600)
-    - 통화 처리 -> ₩1,404,600 (단, 0원일 때는 '-' 단독 표기)
-    - 원화(KRW) 금액(광고비, 매출, CPA, CPC, 객단가 등)은 소수점 없는 정수 원(₩) 표기
+    - 사용자 요청 반영: 원달러(₩) 기호는 제거하고 깔끔한 숫자(콤마)만 표기
     """
     if pd.isna(val) or val is None or str(val).strip() in ["", "nan", "None"]:
         return "-"
     try:
-        clean_str = str(val).replace(",", "").replace("₩", "").replace("%", "").strip()
+        clean_str = str(val).replace(",", "").replace("₩", "").replace("$", "").replace("%", "").strip()
         num = float(clean_str)
         if abs(num) < 1e-9:
             return "-"
@@ -1016,15 +1015,13 @@ def format_accounting(
             else:
                 formatted = f"{num:,.{decimals}f}"
         elif is_currency:
-            # 원화(KRW)는 센트가 없으므로 정수 반올림 표기 (CPA 소수점 제거 요청 반영)
+            # 원화 금액은 원달러 기호 없이 정수 반올림 천단위 콤마 표기
             formatted = f"{int(round(num)):,}"
         elif num.is_integer():
             formatted = f"{int(num):,}"
         else:
             formatted = f"{num:,.2f}"
 
-        if is_currency:
-            return f"₩{formatted}"
         if unit:
             return f"{formatted}{unit}"
         return formatted
@@ -1284,39 +1281,35 @@ def render_total_summary_bar(
     has_checkbox: bool = True
 ) -> None:
     """
-    상단 st.dataframe의 다중 선택 체크박스 열(폭 38px) 및 각 열의 너비와 칼같이 일치하도록
-    열 라인을 맞추고, 각 셀마다 상단 항목명(라벨)을 2단으로 표기하여 가로 스크롤 시에도
-    어떤 지표의 합계인지 즉시 식별할 수 있는 고정밀 회계 합계 요약 바를 렌더링합니다.
+    상단 st.dataframe과 동일하게 데이터 텍스트 길이에 맞춰 자동으로 균형 잡힌 열 간격(오토핏)을 산출하고,
+    각 셀마다 상단 항목명(라벨)을 2단으로 표기하여 직관적으로 식별할 수 있는 회계 합계 요약 바를 렌더링합니다.
 
     :param df_columns: 표에 표시되는 컬럼명 순서 리스트
     :param total_row_dict: 컬럼별 합계/평균 포맷팅 문자열 사전
     :param is_selected: 체크박스 선택에 의한 소계 산출 여부 (선택 시 민트 그린 하이라이트)
-    :param col_widths: 컬럼별 커스텀 픽셀 너비 사전 (None일 경우 DEFAULT_COL_WIDTHS 자동 적용)
+    :param col_widths: 컬럼별 커스텀 픽셀 너비 사전 (None일 경우 브라우저 오토핏 자동 적용)
     :param has_checkbox: st.dataframe에 체크박스 열이 존재하는지 여부 (기본 True, 폭 38px 더미 셀 생성)
     """
     tot_bg = "#E8F8F0" if is_selected else "#F8FAFC"
     border_color = "#B8E4CD" if is_selected else "#E2E8F0"
     box_border = "#00C56F" if is_selected else "#CBD5E1"
 
-    # 1) 각 컬럼 너비 계산
-    actual_widths: List[int] = []
-    width_map = col_widths or DEFAULT_COL_WIDTHS
-    for col in df_columns:
-        w = width_map.get(col, 110)
-        actual_widths.append(w)
-
+    # 체크박스 너비 및 반응형 최소 폭 계산
     checkbox_w = 38 if has_checkbox else 0
-    total_table_w = checkbox_w + sum(actual_widths)
+    min_table_w = checkbox_w + len(df_columns) * 85
 
-    # 2) colgroup 태그 생성 (브라우저 열 너비 비례 고정)
+    # 1) colgroup 태그 생성 (체크박스는 38px 고정, 데이터 열은 자연스러운 오토핏)
     col_tags: List[str] = []
     if has_checkbox:
         col_tags.append('<col style="width: 38px; min-width: 38px; max-width: 38px;">')
-    for w in actual_widths:
-        col_tags.append(f'<col style="width: {w}px; min-width: {w}px;">')
+    for col in df_columns:
+        if col_widths and col in col_widths:
+            col_tags.append(f'<col style="width: {col_widths[col]}px;">')
+        else:
+            col_tags.append('<col>')
     colgroup_html = f"<colgroup>{''.join(col_tags)}</colgroup>"
 
-    # 3) td 셀 목록 생성
+    # 2) td 셀 목록 생성
     td_list: List[str] = []
 
     # 체크박스 위치 더미 셀 (상단 표의 체크박스 열과 정확히 동일한 폭 38px 일치)
@@ -1333,7 +1326,6 @@ def render_total_summary_bar(
         td_list.append(chk_td)
 
     for i, col in enumerate(df_columns):
-        w = actual_widths[i]
         val = total_row_dict.get(col, "-")
 
         if i == 0:
@@ -1342,27 +1334,27 @@ def render_total_summary_bar(
             title_color = "#00874A" if is_selected else "#64748B"
             val_color = "#06291B" if is_selected else "#1E293B"
             td_html = (
-                f"<td style='min-width: {w}px; padding: 8px 10px; "
-                f"text-align: left; vertical-align: middle; border-right: 1px solid {border_color}; overflow: hidden;'>"
-                f"<div style='font-size: 11px; color: {title_color}; font-weight: 700; line-height: 1.2; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{sub_title}</div>"
-                f"<div style='font-size: 13px; font-weight: 800; color: {val_color}; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' title='{val}'>{val}</div>"
+                f"<td style='padding: 8px 12px; white-space: nowrap; "
+                f"text-align: left; vertical-align: middle; border-right: 1px solid {border_color};'>"
+                f"<div style='font-size: 11px; color: {title_color}; font-weight: 700; line-height: 1.2; margin-bottom: 2px;'>{sub_title}</div>"
+                f"<div style='font-size: 13px; font-weight: 800; color: {val_color}; line-height: 1.2;' title='{val}'>{val}</div>"
                 f"</td>"
             )
         else:
-            # 수치/금액 열 (상단에 명확한 컬럼명 + 하단에 볼드 회계 수치 2단 표기, 금액 잘림 방지 넉넉한 너비 및 패딩)
+            # 수치/금액 열 (상단에 명확한 컬럼명 + 하단에 볼드 회계 수치 2단 표기, 원달러 기호 없는 깔끔한 오토핏)
             val_color = "#06291B" if is_selected else "#0F172A"
             td_html = (
-                f"<td style='min-width: {w}px; padding: 8px 10px; "
-                f"text-align: right; vertical-align: middle; border-right: 1px solid {border_color}; overflow: hidden;'>"
-                f"<div style='font-size: 11px; color: #64748B; font-weight: 600; line-height: 1.2; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{col}</div>"
-                f"<div style='font-size: 13px; font-weight: 800; color: {val_color}; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap;'>{val}</div>"
+                f"<td style='padding: 8px 12px; white-space: nowrap; "
+                f"text-align: right; vertical-align: middle; border-right: 1px solid {border_color};'>"
+                f"<div style='font-size: 11px; color: #64748B; font-weight: 600; line-height: 1.2; margin-bottom: 2px;'>{col}</div>"
+                f"<div style='font-size: 13px; font-weight: 800; color: {val_color}; font-variant-numeric: tabular-nums; line-height: 1.2;'>{val}</div>"
                 f"</td>"
             )
         td_list.append(td_html)
 
     summary_html = f"""
     <div style="width: 100%; overflow-x: auto; border: 1.5px solid {box_border}; border-radius: 8px; background-color: {tot_bg}; margin-top: 4px; margin-bottom: 16px; box-shadow: {'0 2px 8px rgba(0, 197, 111, 0.12)' if is_selected else '0 1px 3px rgba(0,0,0,0.04)'}; -webkit-overflow-scrolling: touch;">
-        <table style="table-layout: fixed; width: 100%; min-width: {total_table_w}px; border-collapse: separate; border-spacing: 0; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;">
+        <table style="width: 100%; min-width: {min_table_w}px; table-layout: auto; border-collapse: separate; border-spacing: 0; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;">
             {colgroup_html}
             <tbody>
                 <tr style="background-color: {tot_bg};">
@@ -1854,14 +1846,14 @@ if "통합 대시보드" in selected_page:
     ad_channels = [str(ch).strip() for ch in ad_channel_df["채널"]]
 
     col_cfg_ad = {
-        "채널": st.column_config.TextColumn("채널", width="small"),
-        "광고비": st.column_config.NumberColumn("광고비", format="₩%,d", width="medium"),
-        "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
-        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="medium"),
-        "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
-        "전환매출": st.column_config.NumberColumn("전환매출", format="₩%,d", width="medium"),
-        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
-        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
+        "채널": st.column_config.TextColumn("채널"),
+        "광고비": st.column_config.NumberColumn("광고비", format="%,d"),
+        "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
+        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
+        "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
+        "전환매출": st.column_config.NumberColumn("전환매출", format="%,d"),
+        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
+        "CPA": st.column_config.NumberColumn("CPA", format="%,d"),
     }
 
     ad_table_event = st.dataframe(
@@ -1973,12 +1965,12 @@ if "통합 대시보드" in selected_page:
         sales_channels = [str(ch).strip() for ch in sales_channel_df["판매 채널"] if str(ch).strip() and str(ch).strip() != "nan"]
 
         col_cfg_sales = {
-            "판매 채널": st.column_config.TextColumn("판매 채널", width="medium"),
-            "매출액": st.column_config.NumberColumn("매출액", format="₩%,d", width="medium"),
-            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개", width="small"),
-            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건", width="small"),
-            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d", width="medium"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
+            "판매 채널": st.column_config.TextColumn("판매 채널"),
+            "매출액": st.column_config.NumberColumn("매출액", format="%,d"),
+            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개"),
+            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건"),
+            "배송비": st.column_config.NumberColumn("배송비", format="%,d"),
+            "객단가": st.column_config.NumberColumn("객단가", format="%,d"),
         }
 
         sales_table_event = st.dataframe(
@@ -2033,18 +2025,18 @@ if "통합 대시보드" in selected_page:
     all_monthly_df = get_monthly_trend_table(all_dbs, target_year=None)
 
     col_cfg_monthly = {
-        "월": st.column_config.TextColumn("월", width="small"),
-        "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d", width="medium"),
-        "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d", width="medium"),
-        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
-        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
-        "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
-        "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
-        "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
-        "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
-        "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
-        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
-        "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
+        "월": st.column_config.TextColumn("월"),
+        "총 광고비": st.column_config.NumberColumn("총 광고비", format="%,d"),
+        "총 매출": st.column_config.NumberColumn("총 매출", format="%,d"),
+        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
+        "CPA": st.column_config.NumberColumn("CPA", format="%,d"),
+        "객단가": st.column_config.NumberColumn("객단가", format="%,d"),
+        "CPC": st.column_config.NumberColumn("CPC", format="%,d"),
+        "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
+        "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
+        "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
+        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
+        "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
     }
 
     with tab1:
@@ -2170,18 +2162,18 @@ if "통합 대시보드" in selected_page:
         yearly_df = yearly_df.sort_values(by="연도", ascending=False).reset_index(drop=True)
 
         col_cfg_yearly = {
-            "연도": st.column_config.TextColumn("연도", width="small"),
-            "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d", width="medium"),
-            "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d", width="medium"),
-            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
-            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
-            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
-            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
-            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
-            "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
-            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
-            "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
+            "연도": st.column_config.TextColumn("연도"),
+            "총 광고비": st.column_config.NumberColumn("총 광고비", format="%,d"),
+            "총 매출": st.column_config.NumberColumn("총 매출", format="%,d"),
+            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
+            "CPA": st.column_config.NumberColumn("CPA", format="%,d"),
+            "객단가": st.column_config.NumberColumn("객단가", format="%,d"),
+            "CPC": st.column_config.NumberColumn("CPC", format="%,d"),
+            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
+            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
+            "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
+            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
+            "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
         }
 
         yearly_table_event = st.dataframe(
@@ -2439,24 +2431,24 @@ def render_channel_page(
 
         # 7) 컬럼 설정 (회계 서식 및 가로 스크롤 보장 너비)
         col_cfg_detail = {
-            "월": st.column_config.TextColumn("월", width="small"),
-            "마케팅 분류": st.column_config.TextColumn("분류", width="small"),
-            "매출분류": st.column_config.TextColumn("판매 채널", width="medium"),
-            "캠페인 이름": st.column_config.TextColumn("캠페인명", width="medium"),
-            "광고비": st.column_config.NumberColumn("광고비", format="₩%,d", width="medium"),
-            "전환매출": st.column_config.NumberColumn("매출액" if db_key == "DB_매출" else "전환매출", format="₩%,d", width="medium"),
-            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
-            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
-            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
-            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
-            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
-            "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
-            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
-            "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
-            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개", width="small"),
-            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건", width="small"),
-            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d", width="small"),
+            "월": st.column_config.TextColumn("월"),
+            "마케팅 분류": st.column_config.TextColumn("분류"),
+            "매출분류": st.column_config.TextColumn("판매 채널"),
+            "캠페인 이름": st.column_config.TextColumn("캠페인명"),
+            "광고비": st.column_config.NumberColumn("광고비", format="%,d"),
+            "전환매출": st.column_config.NumberColumn("매출액" if db_key == "DB_매출" else "전환매출", format="%,d"),
+            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
+            "CPA": st.column_config.NumberColumn("CPA", format="%,d"),
+            "CPC": st.column_config.NumberColumn("CPC", format="%,d"),
+            "객단가": st.column_config.NumberColumn("객단가", format="%,d"),
+            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
+            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
+            "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
+            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
+            "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
+            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개"),
+            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건"),
+            "배송비": st.column_config.NumberColumn("배송비", format="%,d"),
         }
 
         # 8) 인터랙티브 데이터프레임 렌더링
