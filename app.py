@@ -1579,7 +1579,7 @@ if "current_page" not in st.session_state or st.session_state["current_page"] no
     st.session_state["current_page"] = page_options[0]
 
 if "selected_year_val" not in st.session_state or st.session_state["selected_year_val"] not in available_years:
-    st.session_state["selected_year_val"] = available_years[0] if available_years else 2026
+    st.session_state["selected_year_val"] = available_years[0] if available_years else 2027
 if "selected_month_raw_val" not in st.session_state:
     st.session_state["selected_month_raw_val"] = "전체 (연간 누적)"
 
@@ -1653,7 +1653,7 @@ with nav_container:
 
                     col_u1, col_u2 = st.columns(2)
                     with col_u1:
-                        cur_nav_y = st.session_state.get("selected_year_val", 2026)
+                        cur_nav_y = st.session_state.get("selected_year_val", available_years[0] if available_years else 2027)
                         cur_nav_m = st.session_state.get("selected_month_raw_val", "")
                         if cur_nav_m and not cur_nav_m.startswith("전체") and cur_nav_m.startswith(f"{cur_nav_y}-"):
                             default_top_m = cur_nav_m

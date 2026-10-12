@@ -73,7 +73,7 @@ def load_db(db_name: str) -> pd.DataFrame:
 
     # 년도 및 월 정리
     if "년도" in df.columns:
-        df["년도"] = pd.to_numeric(df["년도"], errors="coerce").fillna(2026).astype(int)
+        df["년도"] = pd.to_numeric(df["년도"], errors="coerce").fillna(2027).astype(int)
     if "월" in df.columns:
         df["월"] = df["월"].astype(str).str.strip()
 
@@ -550,10 +550,10 @@ def get_available_filters(data_dict: Dict[str, pd.DataFrame]) -> Tuple[List[int]
         if "월" in df.columns:
             months_set.update(df["월"].dropna().astype(str).tolist())
 
-    sorted_years = sorted(list(years_set)) if years_set else [2026, 2027]
+    sorted_years = sorted(list(years_set)) if years_set else [2027]
     sorted_months = sorted([m for m in months_set if m and m != "nan" and len(m) >= 6])
     if not sorted_months:
-        sorted_months = ["2026-10", "2027-01"]
+        sorted_months = ["2027-01"]
 
     return sorted_years, sorted_months
 
