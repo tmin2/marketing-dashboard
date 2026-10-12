@@ -532,7 +532,7 @@ def plot_sales_channel_share(
                     x=df_sorted[target_col],
                     y=df_sorted["판매 채널"],
                     orientation="h",
-                    marker=dict(colors=channel_colors[:len(df_sorted)]),
+                    marker=dict(color=[channel_colors[i % len(channel_colors)] for i in range(len(df_sorted))]),
                     text=[f"{fmt_prefix}{v:,.0f}{unit_str}" for v in df_sorted[target_col]],
                     textposition="auto",
                     insidetextfont=dict(color="#ffffff", size=11, family="Pretendard, sans-serif"),
