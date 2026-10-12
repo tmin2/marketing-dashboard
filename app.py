@@ -1598,10 +1598,15 @@ page_options: List[str] = [
 if "current_page" not in st.session_state or st.session_state["current_page"] not in page_options:
     st.session_state["current_page"] = page_options[0]
 
+if "last_selected_month_by_year" not in st.session_state:
+    st.session_state["last_selected_month_by_year"] = {}
+
 if "selected_year_val" not in st.session_state or st.session_state["selected_year_val"] not in available_years:
     st.session_state["selected_year_val"] = available_years[0] if available_years else 2027
+
+cur_init_year = st.session_state["selected_year_val"]
 if "selected_month_raw_val" not in st.session_state:
-    st.session_state["selected_month_raw_val"] = "전체 (연간 누적)"
+    st.session_state["selected_month_raw_val"] = st.session_state["last_selected_month_by_year"].get(cur_init_year, "전체 (연간 누적)")
 
 # 📌 화면 상단 영구 고정 반응형 스마트 네비게이션 래퍼 컨테이너 (border=True로 DOM 독립성 확보)
 nav_container = st.container(border=True)
@@ -1632,10 +1637,26 @@ with nav_container:
                 cur_y_idx = available_years.index(cur_y) if cur_y in available_years else 0
                 selected_year = st.selectbox("기준 연도", available_years, index=cur_y_idx, key="sb_year_ctl")
                 if selected_year != st.session_state["selected_year_val"]:
+                    # 1. 이전 연도의 선택 월 저장
+                    st.session_state["last_selected_month_by_year"][cur_y] = st.session_state.get("selected_month_raw_val", "전체 (연간 누적)")
+                    # 2. 연도 변경
                     st.session_state["selected_year_val"] = selected_year
-                    st.session_state["selected_month_raw_val"] = "전체 (연간 누적)"
+                    # 3. 새로운 연도의 최근 선택 월 복원 (없으면 '전체 (연간 누적)')
+                    restored_m = st.session_state["last_selected_month_by_year"].get(selected_year, "전체 (연간 누적)")
+                    
+                    # 4. 새 연도에 존재하는 월 목록 확인
+                    new_y_str = str(selected_year)
+                    valid_m_for_new_y = [m for m in available_months if str(m).startswith(f"{new_y_str}-")]
+                    if not valid_m_for_new_y:
+                        valid_m_for_new_y = [f"{new_y_str}-{m:02d}" for m in range(1, 13)]
+                    new_month_options = ["전체 (연간 누적)"] + valid_m_for_new_y
+                    
+                    if restored_m not in new_month_options:
+                        restored_m = new_month_options[0]
+                    
+                    st.session_state["selected_month_raw_val"] = restored_m
                     if "sb_month_ctl" in st.session_state:
-                        st.session_state["sb_month_ctl"] = "전체 (연간 누적)"
+                        st.session_state["sb_month_ctl"] = restored_m
                     st.rerun()
 
             with f_c2:
@@ -1646,10 +1667,15 @@ with nav_container:
                     months_for_cur_year = [f"{cur_y_str}-{m:02d}" for m in range(1, 13)]
                 month_options = ["전체 (연간 누적)"] + months_for_cur_year
 
-                # 세션에 저장된 월 값이 현재 연도에 맞지 않으면 즉시 '전체 (연간 누적)'으로 자동 보정
-                cur_m_val = st.session_state.get("selected_month_raw_val", month_options[0])
+                # 세션에 저장된 월 값이 현재 연도에 맞지 않으면 최근 저장된 월 또는 첫번째 옵션 적용
+                cur_m_val = st.session_state.get("selected_month_raw_val")
                 if cur_m_val not in month_options:
-                    cur_m_val = month_options[0]
+                    cur_y_val = st.session_state["selected_year_val"]
+                    saved_m = st.session_state["last_selected_month_by_year"].get(cur_y_val)
+                    if saved_m in month_options:
+                        cur_m_val = saved_m
+                    else:
+                        cur_m_val = month_options[0]
                     st.session_state["selected_month_raw_val"] = cur_m_val
                     if "sb_month_ctl" in st.session_state:
                         st.session_state["sb_month_ctl"] = cur_m_val
@@ -1657,6 +1683,8 @@ with nav_container:
                 cur_m_idx = month_options.index(cur_m_val)
                 selected_month_raw = st.selectbox("기준 월", month_options, index=cur_m_idx, key="sb_month_ctl")
                 st.session_state["selected_month_raw_val"] = selected_month_raw
+                # 현재 연도의 최근 선택 월 실시간 기억
+                st.session_state["last_selected_month_by_year"][st.session_state["selected_year_val"]] = selected_month_raw
                 selected_month: Optional[str] = None if selected_month_raw.startswith("전체") else selected_month_raw
 
             with f_c3:
@@ -2996,12 +3024,26 @@ elif "데이터 관리" in selected_page:
                     st.markdown(f"###### 🗑️ {s_name} 특정 기간 데이터 삭제")
                     st.caption(f"{s_name}에서 원하는 연도와 월 데이터만 골라 제거합니다.")
                     del_y = st.selectbox("삭제 대상 연도", available_years, key=f"del_y_mgmt_{s_key}")
-                    del_m = st.selectbox("삭제 대상 월 (선택)", ["전체 (해당 연도 전체)"] + available_months, key=f"del_m_mgmt_{s_key}")
+                    # 해당 채널에서 del_y 연도에 실제 존재하는 월만 동적으로 추출
+                    s_months_raw = s_df[s_df["년도"].astype(str) == str(del_y)]["월"].dropna().unique().tolist() if not s_df.empty and "년도" in s_df.columns and "월" in s_df.columns else []
+                    s_months = sorted([str(m).strip() for m in s_months_raw if str(m).strip()])
+                    if not s_months:
+                        s_months = [m for m in available_months if str(m).startswith(f"{del_y}-")]
+                    del_m_options = ["전체 (해당 연도 전체)"] + s_months
+                    del_m = st.selectbox("삭제 대상 월 (선택)", del_m_options, key=f"del_m_mgmt_{s_key}")
                     del_m_val = None if del_m.startswith("전체") else del_m
 
                     if st.button(f"🗑️ {del_y}년 {del_m} 데이터 삭제", key=f"btn_del_item_{s_key}"):
                         deleted = delete_period_data(s_key, del_y, del_m_val)
-                        st.warning(f"'{s_name}'에서 {deleted}건의 데이터가 삭제되었습니다.")
+                        if deleted > 0:
+                            st.success(f"'{s_name}'에서 {deleted}건의 데이터가 성공적으로 삭제되었습니다.")
+                        else:
+                            st.info(f"'{s_name}'에 삭제 대상 데이터가 존재하지 않습니다.")
+                        
+                        # 연도 전체 삭제된 경우 세션 캐시 정리
+                        if del_m_val is None:
+                            if del_y in st.session_state.get("last_selected_month_by_year", {}):
+                                st.session_state["last_selected_month_by_year"].pop(del_y, None)
                         st.rerun()
 
                 with del_c2:
@@ -3019,14 +3061,29 @@ elif "데이터 관리" in selected_page:
         batch_col1, batch_col2 = st.columns([2, 1])
         with batch_col1:
             b_year = st.selectbox("일괄 삭제 대상 연도", available_years, key="batch_del_y_new")
-            b_month = st.selectbox("일괄 삭제 대상 월", ["전체 (연간 전체)"] + available_months, key="batch_del_m_new")
+            b_year_months = [m for m in available_months if str(m).startswith(f"{b_year}-")]
+            b_month_options = ["전체 (해당 연도 전체)"] + b_year_months
+            b_month = st.selectbox("일괄 삭제 대상 월", b_month_options, key="batch_del_m_new")
             b_m_val = None if b_month.startswith("전체") else b_month
 
             if st.button("🗑️ 선택 기간 모든 채널 데이터 일괄 삭제", type="secondary", key="btn_run_batch_del"):
                 total_del = 0
                 for k in DB_KEYS:
                     total_del += delete_period_data(k, b_year, b_m_val)
-                st.warning(f"총 {total_del}건의 데이터가 삭제되었습니다.")
+                if total_del > 0:
+                    st.success(f"총 {total_del}건의 데이터가 성공적으로 삭제되었습니다.")
+                else:
+                    st.info("해당 기간에 등록된 데이터가 없습니다.")
+                
+                # 삭제 후 세션 동기화 보정
+                if b_m_val is None:
+                    if b_year in st.session_state.get("last_selected_month_by_year", {}):
+                        st.session_state["last_selected_month_by_year"].pop(b_year, None)
+                    if st.session_state.get("selected_year_val") == b_year:
+                        rem_years = [y for y in available_years if y != b_year]
+                        if rem_years:
+                            st.session_state["selected_year_val"] = rem_years[0]
+                            st.session_state["selected_month_raw_val"] = st.session_state.get("last_selected_month_by_year", {}).get(rem_years[0], "전체 (연간 누적)")
                 st.rerun()
         with batch_col2:
             st.info("💡 모든 채널의 동일 기간 데이터를 한꺼번에 정리할 때 유용합니다.")

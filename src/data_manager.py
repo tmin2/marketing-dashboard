@@ -516,10 +516,10 @@ def delete_period_data(db_name: str, target_year: int, target_month: Optional[st
         return 0
 
     initial_len = len(df)
-    if target_month and target_month != "전체":
-        df = df[~((df["년도"] == target_year) & (df["월"] == target_month))]
+    if target_month and not str(target_month).strip().startswith("전체"):
+        df = df[~((df["년도"] == int(target_year)) & (df["월"].astype(str).str.strip() == str(target_month).strip()))]
     else:
-        df = df[df["년도"] != target_year]
+        df = df[df["년도"] != int(target_year)]
 
     deleted_count = initial_len - len(df)
     save_db(db_name, df)
