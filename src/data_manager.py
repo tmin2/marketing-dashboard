@@ -281,30 +281,55 @@ def parse_coupang_ad_report(df_raw: pd.DataFrame, default_year: int, default_mon
     return pd.DataFrame(records)
 
 
-def detect_file_format(df: pd.DataFrame) -> str:
+def detect_file_format(df: pd.DataFrame, filename: str = "") -> str:
     """
-    DataFrame의 헤더 컬럼을 분석하여 보고서 유형을 자동 판별합니다.
+    DataFrame의 헤더 컬럼 및 파일명을 분석하여 보고서 유형을 자동 판별합니다.
+    (한글/영문 파일명 및 컬럼 시그니처를 모두 지원)
 
     Returns:
         str: 'DB_네이버', 'DB_메타', 'DB_쿠팡', 'DB_매출' 또는 'STANDARD'
     """
-    cols = [str(c).strip() for c in df.columns]
+    fn_lower = filename.lower()
+    cols = [str(c).strip().lower() for c in df.columns]
 
+    # 1. 파일명 기반 판별 (영문/한글 무관)
+    if any(k in fn_lower for k in ["naver", "네이버", "gfa"]):
+        return "DB_네이버"
+    if any(k in fn_lower for k in ["coupang", "쿠팡"]):
+        return "DB_쿠팡"
+    if any(k in fn_lower for k in ["meta", "facebook", "fb", "instagram", "메타", "페이스북", "인스타"]):
+        return "DB_메타"
+    if any(k in fn_lower for k in ["sales", "revenue", "order", "매출", "판매", "정산", "스마트스토어"]):
+        return "DB_매출"
+
+    # 2. DataFrame 컬럼 기반 판별 (한글/영문 시그니처)
     # 네이버 원본 보고서 시그니처
-    if any("총비용" in c for c in cols) and any("캠페인 분류" in c or "ON/OFF" in c or "총 전환매출액" in c for c in cols):
+    if any(k in c for c in cols for k in ["총비용", "캠페인 분류", "on/off", "총 전환매출액"]) or (
+        any("campaign" in c for c in cols) and any("cost" in c or "spend" in c for c in cols) and any("naver" in c or "keyword" in c or "키워드" in c for c in cols)
+    ):
         return "DB_네이버"
 
     # 메타 원본 보고서 시그니처
-    if any("보고 시작" in c for c in cols) or any("지출 금액" in c for c in cols) or any("Meta 구매 전환값" in c for c in cols):
+    if any(k in c for c in cols for k in ["보고 시작", "지출 금액", "meta 구매 전환값", "결과 기준", "게재결과"]) or (
+        any("reporting starts" in c or "amount spent" in c or "ad set" in c or "purchase roas" in c for c in cols)
+    ):
         return "DB_메타"
 
     # 쿠팡 원본 보고서 시그니처
-    if any("광고일자" in c or "집행금액" in c or "캠페인종류" in c for c in cols):
+    if any(k in c for c in cols for k in ["광고일자", "집행금액", "캠페인종류", "광고전환매출액", "광고수익률"]) or (
+        any("ad spend" in c or "coupang" in c for c in cols)
+    ):
         return "DB_쿠팡"
 
     # 매출 원본 시그니처
-    if any("판매수량" in c or "배송건수" in c or "매출분류" in c for c in cols):
+    if any(k in c for c in cols for k in ["판매수량", "배송건수", "매출분류", "결제금액", "정산금액", "수량", "매출액"]) or (
+        any("quantity" in c or "item count" in c for c in cols)
+    ):
         return "DB_매출"
+
+    # 기본 컬럼 매칭
+    if any("광고비" in c for c in cols) and any("노출수" in c for c in cols):
+        return "DB_네이버"
 
     return "STANDARD"
 
@@ -322,7 +347,7 @@ def process_uploaded_file_v2(
 
     Args:
         file_bytes: 파일 바이트
-        filename: 파일 이름
+        filename: 파일 이름 (한글, 영문 무관)
         selected_db_type: 사용자 선택 DB ('자동 감지', 'DB_네이버', 'DB_쿠팡', 'DB_메타', 'DB_매출')
         target_year: 날짜 없는 파일에 적용할 기본 연도 (예: 2026)
         target_month: 날짜 없는 파일에 적용할 기본 월 (예: '2026-10')
@@ -356,7 +381,7 @@ def process_uploaded_file_v2(
 
             # 단일 시트 처리
             first_df = excel_file.parse(sheet_names[0])
-            return _process_single_df(first_df, selected_db_type, target_year, target_month, import_mode)
+            return _process_single_df(first_df, selected_db_type, target_year, target_month, import_mode, filename)
 
         # 2. CSV 파일인 경우
         elif filename.lower().endswith(".csv"):
@@ -364,7 +389,7 @@ def process_uploaded_file_v2(
                 csv_df = pd.read_csv(io.BytesIO(file_bytes), encoding="utf-8-sig")
             except UnicodeDecodeError:
                 csv_df = pd.read_csv(io.BytesIO(file_bytes), encoding="cp949")
-            return _process_single_df(csv_df, selected_db_type, target_year, target_month, import_mode)
+            return _process_single_df(csv_df, selected_db_type, target_year, target_month, import_mode, filename)
 
         else:
             return False, "지원하지 않는 파일 형식입니다. .xlsx 또는 .csv 파일을 업로드해주세요.", {}
@@ -382,12 +407,13 @@ def _process_single_df(
     selected_db_type: str,
     target_year: int,
     target_month: str,
-    import_mode: str
+    import_mode: str,
+    filename: str = ""
 ) -> Tuple[bool, str, Dict[str, int]]:
     """단일 DataFrame에 대해 포맷 감지 및 DB 적재를 수행합니다."""
-    # 자동 감지 모드인 경우 헤더 판별
+    # 자동 감지 모드인 경우 파일명 및 헤더 종합 판별
     if "자동 감지" in selected_db_type:
-        detected = detect_file_format(df)
+        detected = detect_file_format(df, filename)
         target_db = detected if detected != "STANDARD" else "DB_네이버"
     else:
         target_db = selected_db_type

@@ -490,12 +490,15 @@ st.markdown("""
         div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stSelectbox"] div[data-baseweb="select"] * {
             font-size: 0.78rem !important;
         }
-        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) button {
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) button,
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stPopover"],
+        div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stPopover"] > button {
             min-height: 30px !important;
             height: 30px !important;
             font-size: 0.76rem !important;
             padding: 0 4px !important;
             margin: 0 !important;
+            width: 100% !important;
         }
 
         /* 📌 모바일 메뉴 탭: 3열 2행 앱 스타일 칩 버튼 & 네이버/쿠팡/메타 광고 2번째 줄 배치 */
@@ -1337,8 +1340,8 @@ with nav_container:
 
         with top_col2:
             st.markdown("<div class='top-controls-wrapper-anchor'></div>", unsafe_allow_html=True)
-            # 우측 상단 컨트롤 바 (연도, 월, 백업, 그리고 '상단바 접기' 버튼)
-            f_c1, f_c2, f_c3, f_c4 = st.columns([1.0, 1.3, 1.0, 0.9])
+            # 우측 상단 컨트롤 바 (연도, 월, 파일 올리기, 그리고 '상단바 접기' 버튼)
+            f_c1, f_c2, f_c3, f_c4 = st.columns([1.0, 1.25, 1.25, 0.85])
             with f_c1:
                 cur_y = st.session_state["selected_year_val"]
                 cur_y_idx = available_years.index(cur_y) if cur_y in available_years else 0
@@ -1373,14 +1376,74 @@ with nav_container:
 
             with f_c3:
                 st.markdown("<div class='pc-spacer' style='height: 28px;'></div>", unsafe_allow_html=True)
-                excel_backup = export_all_to_excel()
-                st.download_button(
-                    label="💾 백업",
-                    data=excel_backup,
-                    file_name="마케팅_통합데이터_백업.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
-                )
+                with st.popover("📤 파일 올리기", use_container_width=True, help="클릭하여 광고 또는 매출 보고서 파일을 바로 업로드합니다"):
+                    st.markdown("##### 📤 보고서 파일 바로 올리기")
+                    st.caption("영문/한글 파일명에 관계없이 원본 그대로 업로드하시면 자동으로 분석하여 DB에 반영합니다.")
+
+                    top_up_file = st.file_uploader(
+                        "보고서 파일 선택 (.xlsx, .xls, .csv)",
+                        type=["xlsx", "xls", "csv"],
+                        key="top_bar_uploader"
+                    )
+
+                    col_u1, col_u2 = st.columns(2)
+                    with col_u1:
+                        cur_nav_y = st.session_state.get("selected_year_val", 2026)
+                        cur_nav_m = st.session_state.get("selected_month_raw_val", "")
+                        if cur_nav_m and not cur_nav_m.startswith("전체") and cur_nav_m.startswith(f"{cur_nav_y}-"):
+                            default_top_m = cur_nav_m
+                        else:
+                            default_top_m = f"{cur_nav_y}-01"
+                        top_attr_month = st.text_input("귀속 연월", value=default_top_m, key="top_up_period", help="날짜가 표기되지 않은 파일에 적용할 기준 연월 (YYYY-MM)")
+
+                    with col_u2:
+                        top_mode_choice = st.radio("반영 방식", ["➕ 누적 추가", "🔄 덮어쓰기"], index=0, horizontal=True, key="top_up_mode")
+                        top_mode = "append" if "누적" in top_mode_choice else "overwrite"
+
+                    top_db_choice = st.selectbox(
+                        "대상 채널 지정",
+                        ["자동 감지 (통합 엑셀 / 원본 보고서)", "네이버 광고", "쿠팡 광고", "메타 광고", "전체 매출"],
+                        index=0,
+                        key="top_up_db_choice"
+                    )
+                    top_db_map = {
+                        "자동 감지 (통합 엑셀 / 원본 보고서)": "자동 감지",
+                        "네이버 광고": "DB_네이버",
+                        "쿠팡 광고": "DB_쿠팡",
+                        "메타 광고": "DB_메타",
+                        "전체 매출": "DB_매출"
+                    }
+                    top_selected_db = top_db_map[top_db_choice]
+
+                    if st.button("🚀 데이터 즉시 적용", type="primary", use_container_width=True, key="btn_top_apply_upload"):
+                        if top_up_file is None:
+                            st.warning("⚠️ 업로드할 보고서 파일(.xlsx, .csv)을 먼저 선택해주세요.")
+                        else:
+                            try:
+                                p_parts = top_attr_month.strip().split("-")
+                                u_year = int(p_parts[0])
+                                u_month = f"{p_parts[0]}-{p_parts[1].zfill(2)}"
+                            except Exception:
+                                u_year = cur_nav_y
+                                u_month = default_top_m
+
+                            with st.spinner("보고서를 분석하여 데이터에 반영 중입니다..."):
+                                f_bytes = top_up_file.read()
+                                success, msg, counts = process_uploaded_file_v2(
+                                    file_bytes=f_bytes,
+                                    filename=top_up_file.name,
+                                    selected_db_type=top_selected_db,
+                                    target_year=u_year,
+                                    target_month=u_month,
+                                    import_mode=top_mode
+                                )
+                                if success:
+                                    st.success(f"✅ {msg}")
+                                    st.toast("데이터가 성공적으로 업데이트되었습니다!", icon="🎉")
+                                    st.rerun()
+                                else:
+                                    st.error(f"❌ {msg}")
+
             with f_c4:
                 st.markdown("<div class='pc-spacer' style='height: 28px;'></div>", unsafe_allow_html=True)
                 if st.button("🔼 접기", key="btn_collapse_nav", use_container_width=True, help="상단바를 접어 화면을 더 넓게 봅니다"):
@@ -2318,32 +2381,7 @@ def render_channel_page(
                 st.success("변경사항이 성공적으로 저장되었습니다.")
                 st.rerun()
 
-    # 4. 데이터 삭제 및 관리 도구
-    with st.expander("⚠️ **데이터 삭제 및 관리 도구**", expanded=False):
-        st.markdown(f"**현재 등록된 전체 행 수**: `{len(df_raw)}건`")
-        del_col1, del_col2 = st.columns(2)
 
-        with del_col1:
-            st.markdown("##### 🗑️ 특정 기간 데이터 삭제")
-            st.caption("원하는 연도와 월의 데이터만 골라서 삭제합니다.")
-            del_year = st.selectbox("삭제할 연도", available_years, key=f"del_y_{db_key}")
-            del_month = st.selectbox("삭제할 월 (선택)", ["전체 (해당 연도 모두)"] + available_months, key=f"del_m_{db_key}")
-            del_m_val = None if del_month.startswith("전체") else del_month
-
-            if st.button(f"🗑️ {del_year}년 {del_month} 데이터 삭제", key=f"btn_del_p_{db_key}"):
-                deleted = delete_period_data(db_key, del_year, del_m_val)
-                st.warning(f"{deleted}건의 데이터가 삭제되었습니다.")
-                st.rerun()
-
-        with del_col2:
-            st.markdown("##### 🧹 전체 데이터 비우기 (초기화)")
-            st.caption("이 항목의 모든 데이터를 완전히 비웁니다.")
-            confirm_clear = st.checkbox("정말로 모든 데이터를 삭제하시겠습니까?", key=f"chk_c_{db_key}")
-            if confirm_clear:
-                if st.button("🚨 전체 비우기 실행", type="secondary", key=f"btn_c_{db_key}"):
-                    clear_db(db_key)
-                    st.error("모든 데이터가 삭제되었습니다.")
-                    st.rerun()
 
 
 # ====================================================
@@ -2375,15 +2413,44 @@ elif "매출" in selected_page:
 # ====================================================
 elif "데이터 관리" in selected_page:
     st.markdown("<h2>🛠️ 데이터 관리</h2>", unsafe_allow_html=True)
-    st.caption("새로운 광고/매출 보고서 파일 업로드 및 자동 반영, 등록 현황 확인, 일괄 삭제 및 복원을 관리합니다.")
+    st.caption("새로운 광고/매출 보고서 파일 업로드 및 자동 반영, 통합 엑셀 백업, 항목별/기간별 데이터 삭제 및 복원을 관리합니다.")
 
     # ------------------------------------------------
-    # [1] 스마트 파일 업로드 & 자동 연동 영역 (데이터 관리 최상단)
+    # [0] 원본 데이터 통합 백업 다운로드 카드 (상단바에서 이동)
+    # ------------------------------------------------
+    backup_col1, backup_col2 = st.columns([3.5, 1.5])
+    with backup_col1:
+        st.markdown("""
+        <div style="background-color: #F0FDF4; border: 1.5px solid #BBF7D0; border-radius: 10px; padding: 11px 16px;">
+            <div style="font-weight: 700; font-size: 0.95rem; color: #166534; margin-bottom: 2px;">
+                💾 마케팅 전체 데이터 통합 엑셀 백업
+            </div>
+            <div style="font-size: 0.82rem; color: #15803D;">
+                현재 적재된 네이버·쿠팡·메타 광고 및 전체 매출 원본 데이터를 시트별 엑셀 파일(.xlsx)로 언제든지 안전하게 다운로드합니다.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with backup_col2:
+        excel_backup = export_all_to_excel()
+        st.download_button(
+            label="💾 전체 데이터 엑셀 백업 다운로드",
+            data=excel_backup,
+            file_name="마케팅_통합데이터_백업.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            type="primary",
+            use_container_width=True,
+            key="btn_backup_data_mgmt"
+        )
+
+    st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+
+    # ------------------------------------------------
+    # [1] 스마트 파일 업로드 & 자동 연동 영역
     # ------------------------------------------------
     with st.expander("📂 **엑셀 / CSV 보고서 파일 업로드 및 자동 반영**", expanded=True):
         st.markdown("""
         **💡 광고 및 매출 보고서 자동 연동 안내**
-        * **보고서 원본 호환**: 네이버 검색광고/GFA, 쿠팡 매출성장/검색광고, 메타 광고관리자, 스마트스토어/오픈마켓 정산 엑셀을 수정 없이 원본 그대로 업로드하시면 자동으로 양식을 감지하여 변환합니다.
+        * **보고서 원본 호환**: 네이버 검색광고/GFA, 쿠팡 매출성장/검색광고, 메타 광고관리자, 스마트스토어/오픈마켓 정산 엑셀을 수정 없이 원본 그대로 업로드하시면 자동으로 양식을 감지하여 변환합니다. (영문/한글 파일명 및 컬럼 모두 지원)
         * **반영 방식 안내**: 
           - **➕ 누적 추가 (기본)**: 기존 데이터를 안전하게 보존하면서 새로운 데이터를 덧붙여 누적 집계합니다.
           - **🔄 덮어쓰기**: 선택하신 귀속 연월의 해당 채널 데이터를 새로 올린 파일로 완전히 교체합니다.
@@ -2491,37 +2558,88 @@ elif "데이터 관리" in selected_page:
 
     st.markdown("---")
 
-    col_m1, col_m2 = st.columns(2)
+    # ------------------------------------------------
+    # [2] 데이터 삭제 및 초기화 관리 센터 (항목별 모음)
+    # ------------------------------------------------
+    st.markdown("<h3>🗑️ 데이터 삭제 및 관리 센터</h3>", unsafe_allow_html=True)
+    st.caption("각 광고 및 매출 항목별 데이터 삭제, 전체 기간 일괄 삭제, 그리고 시스템 초기화를 한 곳에서 안전하게 관리합니다.")
 
-    with col_m1:
-        st.markdown("<h3>🗑️ 기간별 데이터 일괄 삭제</h3>", unsafe_allow_html=True)
-        st.caption("선택한 연도와 월에 해당하는 모든 채널(네이버, 쿠팡, 메타, 매출)의 데이터를 한 번에 제거합니다.")
-        batch_year = st.selectbox("일괄 삭제 대상 연도", available_years, key="batch_del_y")
-        batch_month = st.selectbox("일괄 삭제 대상 월", ["전체 (연간 전체)"] + available_months, key="batch_del_m")
-        batch_m_val = None if batch_month.startswith("전체") else batch_month
+    del_tab_item, del_tab_batch, del_tab_reset = st.tabs([
+        "📌 항목별(채널별) 데이터 삭제 및 비우기",
+        "🌐 기간별 전체 채널 일괄 삭제",
+        "🔄 시스템 초기화 및 샘플 복원"
+    ])
 
-        if st.button("🗑️ 선택 기간 데이터 일괄 삭제", type="secondary"):
-            total_del = 0
-            for k in DB_KEYS:
-                total_del += delete_period_data(k, batch_year, batch_m_val)
-            st.warning(f"총 {total_del}건의 데이터가 삭제되었습니다.")
-            st.rerun()
+    with del_tab_item:
+        st.markdown("##### 📌 대상 채널을 선택하여 특정 기간 데이터를 삭제하거나 전체를 비웁니다")
+        sub_ch_tabs = st.tabs(["🟩 네이버 광고", "🚀 쿠팡 광고", "♾️ 메타 광고", "💰 전체 매출"])
+        sub_db_keys = ["DB_네이버", "DB_쿠팡", "DB_메타", "DB_매출"]
+        sub_ch_names = ["네이버 광고", "쿠팡 광고", "메타 광고", "전체 매출"]
 
-    with col_m2:
-        st.markdown("<h3>🔄 데이터 초기화 및 복원</h3>", unsafe_allow_html=True)
-        st.caption("데이터를 테스트 중 초기화하거나 기본 2027년 샘플 상태로 되돌립니다.")
+        for idx, sub_tab in enumerate(sub_ch_tabs):
+            s_key = sub_db_keys[idx]
+            s_name = sub_ch_names[idx]
+            s_df = all_dbs.get(s_key, pd.DataFrame())
+            with sub_tab:
+                st.markdown(f"**현재 `{s_name}` 등록 데이터**: `{len(s_df):,}건`")
+                del_c1, del_c2 = st.columns(2)
+                with del_c1:
+                    st.markdown(f"###### 🗑️ {s_name} 특정 기간 데이터 삭제")
+                    st.caption(f"{s_name}에서 원하는 연도와 월 데이터만 골라 제거합니다.")
+                    del_y = st.selectbox("삭제 대상 연도", available_years, key=f"del_y_mgmt_{s_key}")
+                    del_m = st.selectbox("삭제 대상 월 (선택)", ["전체 (해당 연도 전체)"] + available_months, key=f"del_m_mgmt_{s_key}")
+                    del_m_val = None if del_m.startswith("전체") else del_m
 
-        if st.button("🔄 기본 샘플 데이터로 복원하기", type="primary", use_container_width=True):
-            from src.generate_samples import generate_all_samples
-            generate_all_samples()
-            st.success("기본 샘플 데이터로 복원되었습니다.")
-            st.rerun()
+                    if st.button(f"🗑️ {del_y}년 {del_m} 데이터 삭제", key=f"btn_del_item_{s_key}"):
+                        deleted = delete_period_data(s_key, del_y, del_m_val)
+                        st.warning(f"'{s_name}'에서 {deleted}건의 데이터가 삭제되었습니다.")
+                        st.rerun()
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("##### 🚨 모든 데이터 완전 삭제 (새 데이터 등록용)")
-        confirm_all_clear = st.checkbox("정말로 모든 채널의 데이터를 완전히 비우시겠습니까? (복구 불가)")
-        if confirm_all_clear:
-            if st.button("🚨 모든 데이터 비우기 실행"):
-                clear_all_dbs()
-                st.error("모든 데이터가 비워졌습니다. 이제 새로운 엑셀 보고서를 업로드해 보세요.")
+                with del_c2:
+                    st.markdown(f"###### 🧹 {s_name} 전체 데이터 비우기 (초기화)")
+                    st.caption(f"{s_name}의 모든 등록 데이터를 완전히 제거합니다.")
+                    confirm_item_clear = st.checkbox(f"정말로 '{s_name}' 데이터를 모두 삭제하시겠습니까?", key=f"chk_clear_mgmt_{s_key}")
+                    if confirm_item_clear:
+                        if st.button(f"🚨 {s_name} 전체 비우기 실행", type="secondary", key=f"btn_clear_run_{s_key}"):
+                            clear_db(s_key)
+                            st.error(f"'{s_name}'의 모든 데이터가 비워졌습니다.")
+                            st.rerun()
+
+    with del_tab_batch:
+        st.markdown("##### 🌐 선택한 기간의 모든 채널(네이버, 쿠팡, 메타, 매출) 데이터를 한 번에 제거합니다")
+        batch_col1, batch_col2 = st.columns([2, 1])
+        with batch_col1:
+            b_year = st.selectbox("일괄 삭제 대상 연도", available_years, key="batch_del_y_new")
+            b_month = st.selectbox("일괄 삭제 대상 월", ["전체 (연간 전체)"] + available_months, key="batch_del_m_new")
+            b_m_val = None if b_month.startswith("전체") else b_month
+
+            if st.button("🗑️ 선택 기간 모든 채널 데이터 일괄 삭제", type="secondary", key="btn_run_batch_del"):
+                total_del = 0
+                for k in DB_KEYS:
+                    total_del += delete_period_data(k, b_year, b_m_val)
+                st.warning(f"총 {total_del}건의 데이터가 삭제되었습니다.")
                 st.rerun()
+        with batch_col2:
+            st.info("💡 모든 채널의 동일 기간 데이터를 한꺼번에 정리할 때 유용합니다.")
+
+    with del_tab_reset:
+        st.markdown("##### 🔄 테스트 데이터를 초기화하거나 기본 2027년 샘플 상태로 되돌립니다")
+        r_col1, r_col2 = st.columns(2)
+        with r_col1:
+            st.markdown("###### 🔄 기본 샘플 데이터 복원")
+            st.caption("초기 2027년 기준 마케팅 및 매출 샘플 데이터로 복원합니다.")
+            if st.button("🔄 기본 샘플 데이터로 복원하기", type="primary", use_container_width=True, key="btn_reset_sample"):
+                from src.generate_samples import generate_all_samples
+                generate_all_samples()
+                st.success("기본 샘플 데이터로 복원되었습니다.")
+                st.rerun()
+
+        with r_col2:
+            st.markdown("###### 🚨 모든 데이터 완전 삭제 (새 데이터 등록용)")
+            st.caption("새로운 회사 보고서 적재를 위해 모든 채널 DB를 깨끗이 비웁니다.")
+            confirm_all_clear = st.checkbox("정말로 모든 채널의 데이터를 완전히 비우시겠습니까? (복구 불가)", key="chk_all_clear_new")
+            if confirm_all_clear:
+                if st.button("🚨 모든 데이터 비우기 실행", key="btn_all_clear_run"):
+                    clear_all_dbs()
+                    st.error("모든 데이터가 비워졌습니다. 이제 새로운 엑셀 보고서를 업로드해 보세요.")
+                    st.rerun()
