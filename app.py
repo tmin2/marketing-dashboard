@@ -345,8 +345,7 @@ st.markdown("""
     /* ======================================================= */
     /* 🎨 상단 수평 네비게이션 탭 바 (추출된 라벤더 & 딥 바이올렛 테마) */
     /* ======================================================= */
-    div[role="radiogroup"][aria-label="메뉴 선택"],
-    div[data-testid="stRadio"]:first-child > div[role="radiogroup"] {
+    div[role="radiogroup"][aria-label="메뉴 선택"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: wrap !important;
@@ -692,50 +691,71 @@ st.markdown("""
             order: 6 !important;
         }
 
-        /* 📌 팝오버 내부 라디오 전용: 모바일 터치 및 클릭 100% 보장 */
-        div[data-testid="stPopoverBody"] div[data-testid="stRadio"] div[role="radiogroup"],
-        div[data-testid="stPopover"] div[data-testid="stRadio"] div[role="radiogroup"] {
-            display: flex !important;
-            flex-direction: row !important;
-            grid-template-columns: none !important;
-            gap: 8px !important;
-            background-color: transparent !important;
-            padding: 4px 0 !important;
-            width: 100% !important;
-        }
-        div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label,
-        div[data-testid="stPopover"] div[data-testid="stRadio"] label {
-            display: flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            padding: 6px 12px !important;
-            border-radius: 8px !important;
-            background-color: #F8FAF9 !important;
-            border: 1px solid #DFE7E2 !important;
-            cursor: pointer !important;
-            pointer-events: auto !important;
-            touch-action: manipulation !important;
-            min-height: 36px !important;
-            flex: 1 1 0 !important;
-            justify-content: center !important;
-        }
-        div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label div:first-child,
-        div[data-testid="stPopover"] div[data-testid="stRadio"] label div:first-child {
-            display: flex !important;
-            visibility: visible !important;
-        }
-        div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label p,
-        div[data-testid="stPopover"] div[data-testid="stRadio"] label p {
-            font-size: 0.85rem !important;
-            margin: 0 !important;
-            line-height: 1.2 !important;
-            color: #06291B !important;
-        }
-
         /* 스마트 안내 캡션 박스 숨김 (모바일 화면 대폭 절약) */
         .smart-tab-guide-box {
             display: none !important;
         }
+    }
+
+    /* ======================================================= */
+    /* 📌 팝오버 내부 '반영 방식' 라디오 전용 (세그먼트 컨트롤 버튼) */
+    /* ======================================================= */
+    div[data-testid="stPopoverBody"] div[data-testid="stRadio"] div[role="radiogroup"],
+    div[data-testid="stPopover"] div[data-testid="stRadio"] div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 6px !important;
+        background-color: #F1F5F9 !important;
+        padding: 4px !important;
+        border-radius: 8px !important;
+        border: 1px solid #CBD5E1 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label,
+    div[data-testid="stPopover"] div[data-testid="stRadio"] label {
+        flex: 1 1 0% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        padding: 6px 12px !important;
+        border-radius: 6px !important;
+        background-color: transparent !important;
+        border: 1px solid transparent !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+    div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label p,
+    div[data-testid="stPopover"] div[data-testid="stRadio"] label p {
+        font-size: 0.88rem !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+    div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label:hover,
+    div[data-testid="stPopover"] div[data-testid="stRadio"] label:hover {
+        background-color: rgba(255, 255, 255, 0.7) !important;
+    }
+    /* 선택된 활성 옵션: 흰색 입체 버튼 */
+    div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label[data-selected],
+    div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label:has(input:checked),
+    div[data-testid="stPopover"] div[data-testid="stRadio"] label[data-selected],
+    div[data-testid="stPopover"] div[data-testid="stRadio"] label:has(input:checked) {
+        background-color: #FFFFFF !important;
+        border: 1px solid #CBD5E1 !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+    }
+    div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label[data-selected] p,
+    div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label:has(input:checked) p,
+    div[data-testid="stPopover"] div[data-testid="stRadio"] label[data-selected] p,
+    div[data-testid="stPopover"] div[data-testid="stRadio"] label:has(input:checked) p {
+        color: #0F172A !important;
+        font-weight: 700 !important;
     }
 
     /* ======================================================= */
