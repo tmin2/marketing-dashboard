@@ -1746,22 +1746,12 @@ if "통합 대시보드" in selected_page:
     monthly_df = get_monthly_trend_table(all_dbs, target_year=selected_year)
     channel_df = get_channel_performance_table(all_dbs, target_year=selected_year, target_month=selected_month)
 
-    # 🎛️ 그래프 뷰어 스마트 컨트롤 바 (사이즈 조절 & 차트 타입 선택)
+    # 🎛️ 그래프 뷰어 스마트 컨트롤 바 (차트 유형 선택, 높이는 컴팩트 270px로 고정)
+    chart_h: int = 270  # 사용자 요청: 모바일 및 PC에 최적화된 컴팩트 사이즈로 고정
     chart_ctl_box = st.container()
     with chart_ctl_box:
-        ctl_c1, ctl_c2, ctl_c3 = st.columns([1.3, 1.4, 1.4])
+        ctl_c1, ctl_c2 = st.columns([1.0, 1.0])
         with ctl_c1:
-            size_choice = st.pills(
-                "📐 그래프 크기",
-                ["📱 컴팩트 (260px)", "💻 기본 (330px)", "🖥️ 와이드 (440px)"],
-                default=st.session_state.get("chart_size_mode", "💻 기본 (330px)"),
-                key="pill_chart_size"
-            )
-            st.session_state["chart_size_mode"] = size_choice or "💻 기본 (330px)"
-            chart_h_map = {"📱 컴팩트 (260px)": 260, "💻 기본 (330px)": 330, "🖥️ 와이드 (440px)": 440}
-            chart_h = chart_h_map.get(st.session_state["chart_size_mode"], 330)
-
-        with ctl_c2:
             monthly_chart_type = st.selectbox(
                 "📈 추이 차트 유형",
                 ["📊 복합 차트 (막대+선)", "📈 꺾은선 차트 (Line)", "📶 영역형 차트 (Area)"],
@@ -1769,7 +1759,7 @@ if "통합 대시보드" in selected_page:
                 key="sb_monthly_chart_type"
             )
 
-        with ctl_c3:
+        with ctl_c2:
             share_chart_type = st.selectbox(
                 "🍩 비중 차트 유형",
                 ["🍩 도넛 차트", "📊 가로 막대 (모바일 추천)", "🌲 트리맵 (면적형)", "🥧 원형 파이"],
@@ -2321,10 +2311,8 @@ def render_channel_page(
         with m5:
             render_google_kpi_card("CPA", format_accounting(cpa, is_currency=True), "전환당 비용", theme_color)
 
-    # 2. 상단 차트 (동적 높이 조절 적용)
-    cur_chart_h = {"📱 컴팩트 (260px)": 260, "💻 기본 (330px)": 330, "🖥️ 와이드 (440px)": 440}.get(
-        st.session_state.get("chart_size_mode", "💻 기본 (330px)"), 330
-    )
+    # 2. 상단 차트 (컴팩트 높이 270px 고정)
+    cur_chart_h: int = 270
     clean_name = channel_display_name.replace("💚", "").replace("🚀", "").replace("🔵", "").replace("💰", "").strip()
     gc1, gc2 = st.columns([1, 1.2])
     with gc1:
