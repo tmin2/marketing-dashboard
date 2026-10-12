@@ -372,58 +372,27 @@ st.markdown("""
     }
 
     /* ======================================================= */
-    /* 📱 슬림(접힌) 모드 순수 토글 버튼 스타일링 (모바일 최적화 36px 컴팩트 디자인) */
+    /* 📱 슬림(접힌) 모드 상단바 및 우측 펼치기 버튼 컴팩트 정렬 */
     /* ======================================================= */
-    div[data-testid="stColumn"] div.stButton > button[key*="btn_slim_toggle_"] {
+    div[data-testid="stColumn"] div.stButton > button[key="btn_expand_nav"] {
         height: 36px !important;
         min-height: 36px !important;
         max-height: 36px !important;
-        font-size: 1.20rem !important;
-        line-height: 1 !important;
-        border-radius: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border: 1.5px solid #DFE7E2 !important;
-        background-color: #FFFFFF !important;
-        box-shadow: 0 1px 3px rgba(6, 41, 27, 0.04) !important;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    }
-    div[data-testid="stColumn"] div.stButton > button[key*="btn_slim_toggle_"]:hover {
-        border-color: #00C56F !important;
-        background-color: #F0FDF4 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 3px 8px rgba(0, 197, 111, 0.20) !important;
-    }
-    /* 활성 토글 (Primary - 선명한 에메랄드 그라데이션) */
-    div[data-testid="stColumn"] div.stButton > button[key*="btn_slim_toggle_"][kind="primary"] {
-        background: linear-gradient(135deg, #00D87B 0%, #00A35C 100%) !important;
-        border-color: #00A35C !important;
-        box-shadow: 0 2px 8px rgba(0, 197, 111, 0.40) !important;
-        color: #FFFFFF !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* 슬림 모드 우측 펼치기 버튼 높이 34px 컴팩트 정렬 */
-    div[data-testid="stColumn"] div.stButton > button[key="btn_expand_nav"] {
-        height: 34px !important;
-        min-height: 34px !important;
-        max-height: 34px !important;
-        font-size: 0.84rem !important;
+        font-size: 0.86rem !important;
         font-weight: 700 !important;
         border-radius: 8px !important;
         margin: 0 !important;
-        padding: 0 10px !important;
+        padding: 0 12px !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #DFE7E2 !important;
+        color: #06291B !important;
+        box-shadow: 0 1px 3px rgba(6, 41, 27, 0.04) !important;
+        transition: all 0.2s ease !important;
     }
-
-    @media (max-width: 768px) {
-        div[data-testid="stColumn"] div.stButton > button[key*="btn_slim_toggle_"] {
-            height: 34px !important;
-            min-height: 34px !important;
-            font-size: 1.10rem !important;
-        }
+    div[data-testid="stColumn"] div.stButton > button[key="btn_expand_nav"]:hover {
+        border-color: #00C56F !important;
+        color: #00A35C !important;
+        background-color: #F0FDF4 !important;
     }
 
     /* Expander 모던 카드 스타일링 */
@@ -1100,7 +1069,7 @@ else:
     st.markdown("""
     <style>
         .block-container {
-            padding-top: 108px !important;
+            padding-top: 66px !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1232,48 +1201,21 @@ with nav_container:
         """, unsafe_allow_html=True)
 
     else:
-        # [B] 접힌 초슬림 플로팅 바 모드 (모바일 완벽 대응: 1행 배지&펼치기 / 2행 36px 컴팩트 토글 바)
-        slim_pages = [
-            ("🏠", "🏠 통합 대시보드", "통합 대시보드로 이동"),
-            ("🟩", "🟩 네이버 광고", "네이버 광고로 이동"),
-            ("🚀", "🚀 쿠팡 광고", "쿠팡 광고로 이동"),
-            ("♾️", "♾️ 메타 광고", "메타 광고로 이동"),
-            ("💰", "💰 전체 매출", "전체 매출로 이동"),
-            ("🛠️", "🛠️ 데이터 관리", "데이터 관리로 이동"),
-        ]
-
-        # 1행: 현재 상태 배지 (좌측) & 상단바 펼치기 버튼 (우측)
-        top_row_c1, top_row_c2 = st.columns([4.4, 1.2])
-        with top_row_c1:
+        # [B] 접힌 초슬림 플로팅 바 모드 (모바일 100% 최적화: 불필요한 버튼 창 완전 제거, 단 1줄 컴팩트 바)
+        slim_c1, slim_c2 = st.columns([3.8, 1.4])
+        with slim_c1:
             st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 8px; height: 34px;">
-                <span style="font-weight: 800; font-size: 1.02rem; color: #06291B; white-space: nowrap;">📈 {st.session_state['current_page']}</span>
-                <span style="background-color: #EEF3F0; color: #06291B; padding: 2px 7px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; border: 1px solid #DFE7E2; white-space: nowrap;">
+            <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 1px 0;">
+                <span style="font-weight: 800; font-size: 1.08rem; color: #06291B; white-space: nowrap;">📈 {st.session_state['current_page']}</span>
+                <span style="background-color: #EEF3F0; color: #06291B; padding: 3px 8px; border-radius: 6px; font-size: 0.80rem; font-weight: 600; border: 1px solid #DFE7E2; white-space: nowrap;">
                     📅 {st.session_state['selected_year_val']}년 {st.session_state['selected_month_raw_val']}
                 </span>
             </div>
             """, unsafe_allow_html=True)
-        with top_row_c2:
+        with slim_c2:
             if st.button("🔽 상단바 펼치기", key="btn_expand_nav", use_container_width=True, help="상단바와 전체 탭 메뉴를 다시 펼칩니다"):
                 st.session_state["show_top_navbar"] = True
                 st.rerun()
-
-        # 2행: 배지 아래쪽에 위치하는 6개 슬림 토글 버튼 바 (모바일 완벽 대응 36px 컴팩트 사이즈)
-        st.markdown("<div style='margin-top: 3px;'></div>", unsafe_allow_html=True)
-        t_cols = st.columns(6)
-        for i, (ico, full_title, h_text) in enumerate(slim_pages):
-            with t_cols[i]:
-                is_active = (st.session_state["current_page"] == full_title)
-                btn_kind = "primary" if is_active else "secondary"
-                if st.button(
-                    ico,
-                    key=f"btn_slim_toggle_{i}",
-                    type=btn_kind,
-                    use_container_width=True,
-                    help=f"{full_title}: {h_text}"
-                ):
-                    st.session_state["current_page"] = full_title
-                    st.rerun()
 
         selected_page = st.session_state["current_page"]
         selected_year = st.session_state["selected_year_val"]
