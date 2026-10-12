@@ -1764,14 +1764,14 @@ if "통합 대시보드" in selected_page:
     ad_channels = [str(ch).strip() for ch in ad_channel_df["채널"]]
 
     col_cfg_ad = {
-        "채널": st.column_config.TextColumn("채널"),
-        "광고비": st.column_config.NumberColumn("광고비", format="₩%,d"),
-        "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
-        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
-        "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
-        "전환매출": st.column_config.NumberColumn("전환매출", format="₩%,d"),
-        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
-        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
+        "채널": st.column_config.TextColumn("채널", width="small"),
+        "광고비": st.column_config.NumberColumn("광고비", format="₩%,d", width="medium"),
+        "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
+        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="medium"),
+        "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
+        "전환매출": st.column_config.NumberColumn("전환매출", format="₩%,d", width="medium"),
+        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
+        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
     }
 
     ad_table_event = st.dataframe(
@@ -1883,12 +1883,12 @@ if "통합 대시보드" in selected_page:
         sales_channels = [str(ch).strip() for ch in sales_channel_df["판매 채널"] if str(ch).strip() and str(ch).strip() != "nan"]
 
         col_cfg_sales = {
-            "판매 채널": st.column_config.TextColumn("판매 채널"),
-            "매출액": st.column_config.NumberColumn("매출액", format="₩%,d"),
-            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개"),
-            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건"),
-            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
+            "판매 채널": st.column_config.TextColumn("판매 채널", width="medium"),
+            "매출액": st.column_config.NumberColumn("매출액", format="₩%,d", width="medium"),
+            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개", width="small"),
+            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건", width="small"),
+            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d", width="small"),
+            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
         }
 
         sales_table_event = st.dataframe(
@@ -2349,26 +2349,26 @@ def render_channel_page(
         final_show_cols = [c for c in ordered_cols if c in df_disp.columns]
         df_disp = df_disp[final_show_cols]
 
-        # 7) 컬럼 설정 (회계 서식 및 자동 너비 오토핏)
+        # 7) 컬럼 설정 (회계 서식 및 가로 스크롤 보장 너비)
         col_cfg_detail = {
-            "월": st.column_config.TextColumn("월"),
-            "마케팅 분류": st.column_config.TextColumn("분류"),
-            "매출분류": st.column_config.TextColumn("판매 채널"),
-            "캠페인 이름": st.column_config.TextColumn("캠페인명"),
-            "광고비": st.column_config.NumberColumn("광고비", format="₩%,d"),
-            "전환매출": st.column_config.NumberColumn("매출액" if db_key == "DB_매출" else "전환매출", format="₩%,d"),
-            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
-            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
-            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
-            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
-            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
-            "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
-            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
-            "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
-            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개"),
-            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건"),
-            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d"),
+            "월": st.column_config.TextColumn("월", width="small"),
+            "마케팅 분류": st.column_config.TextColumn("분류", width="small"),
+            "매출분류": st.column_config.TextColumn("판매 채널", width="medium"),
+            "캠페인 이름": st.column_config.TextColumn("캠페인명", width="medium"),
+            "광고비": st.column_config.NumberColumn("광고비", format="₩%,d", width="medium"),
+            "전환매출": st.column_config.NumberColumn("매출액" if db_key == "DB_매출" else "전환매출", format="₩%,d", width="medium"),
+            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
+            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
+            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
+            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
+            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
+            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
+            "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
+            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
+            "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
+            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개", width="small"),
+            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건", width="small"),
+            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d", width="small"),
         }
 
         # 8) 인터랙티브 데이터프레임 렌더링
