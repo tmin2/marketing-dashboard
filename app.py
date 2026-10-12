@@ -499,7 +499,8 @@ st.markdown("""
         }
 
         /* 📌 모바일 메뉴 탭: 3열 2행 앱 스타일 칩 버튼 & 네이버/쿠팡/메타 광고 2번째 줄 배치 */
-        div[role="radiogroup"][aria-label="메뉴 선택"] {
+        div[role="radiogroup"][aria-label="메뉴 선택"],
+        div[data-testid="stRadio"] > div[role="radiogroup"] {
             display: grid !important;
             grid-template-columns: repeat(3, 1fr) !important;
             gap: 3px !important;
@@ -509,7 +510,10 @@ st.markdown("""
             background-color: #F1F5F3 !important;
             border-radius: 8px !important;
         }
-        div[role="radiogroup"][aria-label="메뉴 선택"] label {
+        div[role="radiogroup"][aria-label="메뉴 선택"] label,
+        div[data-testid="stRadio"] > div[role="radiogroup"] label,
+        div[role="radiogroup"][aria-label="메뉴 선택"] > *,
+        div[data-testid="stRadio"] > div[role="radiogroup"] > * {
             padding: 4px 1px !important;
             margin: 0 !important;
             min-height: 29px !important;
@@ -522,10 +526,10 @@ st.markdown("""
             box-shadow: none !important;
         }
         /* 라디오 원형 체크 아이콘 숨김 */
-        div[role="radiogroup"][aria-label="메뉴 선택"] label div:first-child {
+        div[role="radiogroup"] label div:first-child {
             display: none !important;
         }
-        div[role="radiogroup"][aria-label="메뉴 선택"] label p {
+        div[role="radiogroup"] label p {
             font-size: 0.70rem !important;
             font-weight: 700 !important;
             margin: 0 !important;
@@ -537,22 +541,46 @@ st.markdown("""
         }
 
         /* [모바일 전용 정렬] 1번째 줄: 종합/매출/관리, 2번째 줄: 3대 광고 매체 (네이버, 쿠팡, 메타) */
-        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="통합 대시보드"]) {
+        div[role="radiogroup"] > *:nth-child(1),
+        div[role="radiogroup"] label:nth-of-type(1),
+        div[role="radiogroup"] label:has(input[value*="통합"]) {
+            grid-row: 1 !important;
+            grid-column: 1 !important;
             order: 1 !important;
         }
-        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="전체 매출"]) {
+        div[role="radiogroup"] > *:nth-child(5),
+        div[role="radiogroup"] label:nth-of-type(5),
+        div[role="radiogroup"] label:has(input[value*="매출"]) {
+            grid-row: 1 !important;
+            grid-column: 2 !important;
             order: 2 !important;
         }
-        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="데이터 관리"]) {
+        div[role="radiogroup"] > *:nth-child(6),
+        div[role="radiogroup"] label:nth-of-type(6),
+        div[role="radiogroup"] label:has(input[value*="관리"]) {
+            grid-row: 1 !important;
+            grid-column: 3 !important;
             order: 3 !important;
         }
-        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="네이버"]) {
+        div[role="radiogroup"] > *:nth-child(2),
+        div[role="radiogroup"] label:nth-of-type(2),
+        div[role="radiogroup"] label:has(input[value*="네이버"]) {
+            grid-row: 2 !important;
+            grid-column: 1 !important;
             order: 4 !important;
         }
-        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="쿠팡"]) {
+        div[role="radiogroup"] > *:nth-child(3),
+        div[role="radiogroup"] label:nth-of-type(3),
+        div[role="radiogroup"] label:has(input[value*="쿠팡"]) {
+            grid-row: 2 !important;
+            grid-column: 2 !important;
             order: 5 !important;
         }
-        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="메타"]) {
+        div[role="radiogroup"] > *:nth-child(4),
+        div[role="radiogroup"] label:nth-of-type(4),
+        div[role="radiogroup"] label:has(input[value*="메타"]) {
+            grid-row: 2 !important;
+            grid-column: 3 !important;
             order: 6 !important;
         }
 
@@ -1394,10 +1422,27 @@ with nav_container:
                         }
                     }
                 });
+                // 모바일 환경일 때 1행: 통합/매출/관리, 2행: 네이버/쿠팡/메타 순서 재배치 강제 적용
+                if (window.innerWidth <= 768) {
+                    const group = window.parent.document.querySelector('div[role="radiogroup"][aria-label="메뉴 선택"]') 
+                               || window.parent.document.querySelector('div[data-testid="stRadio"] div[role="radiogroup"]');
+                    if (group) {
+                        Array.from(group.children).forEach(el => {
+                            const txt = (el.innerText || '').trim();
+                            if (txt.includes('통합')) { el.style.order = '1'; el.style.gridRow = '1'; el.style.gridColumn = '1'; }
+                            else if (txt.includes('매출')) { el.style.order = '2'; el.style.gridRow = '1'; el.style.gridColumn = '2'; }
+                            else if (txt.includes('관리')) { el.style.order = '3'; el.style.gridRow = '1'; el.style.gridColumn = '3'; }
+                            else if (txt.includes('네이버')) { el.style.order = '4'; el.style.gridRow = '2'; el.style.gridColumn = '1'; }
+                            else if (txt.includes('쿠팡')) { el.style.order = '5'; el.style.gridRow = '2'; el.style.gridColumn = '2'; }
+                            else if (txt.includes('메타')) { el.style.order = '6'; el.style.gridRow = '2'; el.style.gridColumn = '3'; }
+                        });
+                    }
+                }
             } catch(e) {}
         }
         setTimeout(injectNavTooltips, 300);
-        setTimeout(injectNavTooltips, 1000);
+        setTimeout(injectNavTooltips, 800);
+        setTimeout(injectNavTooltips, 1500);
         </script>
         """, unsafe_allow_html=True)
 
@@ -1558,8 +1603,8 @@ if "통합 대시보드" in selected_page:
     st.markdown("<h2>📋 채널별 광고 성과 (기준 월 연동)</h2>", unsafe_allow_html=True)
     st.caption("표에서 원하는 채널 행(체크박스)을 직접 클릭하면 다중 선택 및 하이라이트되며, 하단에 선택 항목의 합계(소계)가 실시간으로 자동 산출됩니다.")
 
-    # 🛠️ 실시간 정렬 & 필터링 컨트롤 바
-    ad_f_c1, ad_f_c2, ad_f_c3 = st.columns([1.8, 1.4, 0.9])
+    # 🛠️ 실시간 필터링 컨트롤 바 (표 헤더 클릭으로 직접 정렬 지원)
+    ad_f_c1, ad_f_c2 = st.columns([3.2, 0.8])
     with ad_f_c1:
         ad_search_query = st.text_input(
             "채널 검색 필터",
@@ -1568,14 +1613,6 @@ if "통합 대시보드" in selected_page:
             label_visibility="collapsed"
         )
     with ad_f_c2:
-        ad_sort_opt = st.selectbox(
-            "정렬 기준",
-            ["💸 광고비 많은 순 (기본)", "💰 전환매출 높은 순", "🎯 ROAS 높은 순", "⚡ 전환수 많은 순", "👆 클릭수 많은 순"],
-            index=0,
-            key="sb_ad_sort_opt",
-            label_visibility="collapsed"
-        )
-    with ad_f_c3:
         ad_hide_zero = st.checkbox("0원 채널 제외", value=False, key="chk_ad_hide_zero")
 
     # [실제 필터링 적용]
@@ -1584,29 +1621,21 @@ if "통합 대시보드" in selected_page:
     if ad_hide_zero:
         ad_channel_df = ad_channel_df[(ad_channel_df["광고비"] > 0) | (ad_channel_df["전환매출"] > 0)]
 
-    # [정렬 적용]
-    ad_sort_key_map = {
-        "💸 광고비 많은 순 (기본)": "광고비",
-        "💰 전환매출 높은 순": "전환매출",
-        "🎯 ROAS 높은 순": "ROAS",
-        "⚡ 전환수 많은 순": "전환수",
-        "👆 클릭수 많은 순": "클릭수"
-    }
-    target_ad_sort_col = ad_sort_key_map.get(ad_sort_opt, "광고비")
-    if target_ad_sort_col in ad_channel_df.columns:
-        ad_channel_df = ad_channel_df.sort_values(by=target_ad_sort_col, ascending=False).reset_index(drop=True)
+    # [기본 정렬: 광고비 내림차순, 표 제목 클릭 시 오름차순/내림차순 자유 정렬]
+    if "광고비" in ad_channel_df.columns:
+        ad_channel_df = ad_channel_df.sort_values(by="광고비", ascending=False).reset_index(drop=True)
 
     ad_channels = [str(ch).strip() for ch in ad_channel_df["채널"]]
 
     col_cfg_ad = {
-        "채널": st.column_config.TextColumn("채널"),
-        "광고비": st.column_config.NumberColumn("광고비", format="₩%,d"),
-        "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
-        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
-        "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
-        "전환매출": st.column_config.NumberColumn("전환매출", format="₩%,d"),
-        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
-        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
+        "채널": st.column_config.TextColumn("채널", width="small"),
+        "광고비": st.column_config.NumberColumn("광고비", format="₩%,d", width="medium"),
+        "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
+        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="medium"),
+        "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
+        "전환매출": st.column_config.NumberColumn("전환매출", format="₩%,d", width="medium"),
+        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
+        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
     }
 
     ad_table_event = st.dataframe(
@@ -1688,8 +1717,8 @@ if "통합 대시보드" in selected_page:
         st.markdown("<h3>판매채널별 상세 실적</h3>", unsafe_allow_html=True)
         st.caption("표의 행을 직접 클릭하여 원하는 판매처를 다중 선택하시면 하단에 실시간 소계가 반영됩니다.")
 
-        # 🛠️ 판매채널별 실시간 정렬 & 필터링 컨트롤 바
-        s_f_c1, s_f_c2, s_f_c3 = st.columns([1.6, 1.4, 1.0])
+        # 🛠️ 판매채널별 실시간 필터링 컨트롤 바 (표 헤더 클릭으로 직접 정렬 지원)
+        s_f_c1, s_f_c2 = st.columns([3.0, 1.0])
         with s_f_c1:
             sales_search_query = st.text_input(
                 "판매처 검색",
@@ -1698,14 +1727,6 @@ if "통합 대시보드" in selected_page:
                 label_visibility="collapsed"
             )
         with s_f_c2:
-            sales_sort_opt = st.selectbox(
-                "판매채널 정렬",
-                ["💰 매출액 높은 순 (기본)", "📦 판매수량 많은 순", "🚚 배송건수 많은 순", "🏷️ 객단가 높은 순", "💳 배송비 많은 순"],
-                index=0,
-                key="sb_sales_sort_opt",
-                label_visibility="collapsed"
-            )
-        with s_f_c3:
             sales_hide_zero = st.checkbox("0원 판매처 제외", value=False, key="chk_sales_hide_zero")
 
         # [실제 필터링 적용]
@@ -1714,27 +1735,19 @@ if "통합 대시보드" in selected_page:
         if sales_hide_zero and "매출액" in sales_channel_df.columns:
             sales_channel_df = sales_channel_df[sales_channel_df["매출액"] > 0]
 
-        # [정렬 적용]
-        sales_sort_key_map = {
-            "💰 매출액 높은 순 (기본)": "매출액",
-            "📦 판매수량 많은 순": "판매수량",
-            "🚚 배송건수 많은 순": "배송건수",
-            "🏷️ 객단가 높은 순": "객단가",
-            "💳 배송비 많은 순": "배송비"
-        }
-        target_s_sort_col = sales_sort_key_map.get(sales_sort_opt, "매출액")
-        if target_s_sort_col in sales_channel_df.columns:
-            sales_channel_df = sales_channel_df.sort_values(by=target_s_sort_col, ascending=False).reset_index(drop=True)
+        # [기본 정렬: 매출액 내림차순, 표 제목 클릭 시 오름차순/내림차순 자유 정렬]
+        if "매출액" in sales_channel_df.columns:
+            sales_channel_df = sales_channel_df.sort_values(by="매출액", ascending=False).reset_index(drop=True)
 
         sales_channels = [str(ch).strip() for ch in sales_channel_df["판매 채널"] if str(ch).strip() and str(ch).strip() != "nan"]
 
         col_cfg_sales = {
-            "판매 채널": st.column_config.TextColumn("판매 채널"),
-            "매출액": st.column_config.NumberColumn("매출액", format="₩%,d"),
-            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개"),
-            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건"),
-            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
+            "판매 채널": st.column_config.TextColumn("판매 채널", width="small"),
+            "매출액": st.column_config.NumberColumn("매출액", format="₩%,d", width="medium"),
+            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개", width="small"),
+            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건", width="small"),
+            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d", width="small"),
+            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
         }
 
         sales_table_event = st.dataframe(
@@ -1789,23 +1802,23 @@ if "통합 대시보드" in selected_page:
     all_monthly_df = get_monthly_trend_table(all_dbs, target_year=None)
 
     col_cfg_monthly = {
-        "월": st.column_config.TextColumn("월"),
-        "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d"),
-        "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d"),
-        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
-        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
-        "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
-        "CPC": st.column_config.NumberColumn("CPC", format="₩%,d"),
-        "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
-        "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
-        "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
-        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
-        "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
+        "월": st.column_config.TextColumn("월", width="small"),
+        "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d", width="medium"),
+        "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d", width="medium"),
+        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
+        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
+        "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
+        "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
+        "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
+        "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
+        "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
+        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
+        "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
     }
 
     with tab1:
-        # 월별 성과표 상단: 실제 필터링 및 정렬 컨트롤 바
-        m_head_c1, m_head_c2, m_head_c3, m_head_c4 = st.columns([1.6, 1.2, 1.3, 0.9])
+        # 월별 성과표 상단: 실제 필터링 컨트롤 바 (표 헤더 클릭으로 직접 정렬 지원)
+        m_head_c1, m_head_c2, m_head_c3 = st.columns([1.8, 1.4, 0.8])
         with m_head_c1:
             m_search_query = st.text_input(
                 "월 검색 필터",
@@ -1823,14 +1836,6 @@ if "통합 대시보드" in selected_page:
                 label_visibility="collapsed"
             )
         with m_head_c3:
-            m_sort_opt = st.selectbox(
-                "월별 정렬 순서",
-                ["📅 최신 월 순 (기본)", "📅 과거 월 순 (오름차순)", "💰 총 매출 높은 순", "💸 총 광고비 많은 순", "🎯 ROAS 높은 순"],
-                index=0,
-                key="sb_m_sort_opt",
-                label_visibility="collapsed"
-            )
-        with m_head_c4:
             m_hide_empty = st.checkbox("0원 실적 제외", value=False, key="chk_m_hide_empty")
 
         # [실제 연도 및 검색 필터링 적용]
@@ -1846,17 +1851,8 @@ if "통합 대시보드" in selected_page:
         if m_hide_empty:
             disp_monthly = disp_monthly[(disp_monthly["총 광고비"] > 0) | (disp_monthly["총 매출"] > 0)]
 
-        # [정렬 적용]
-        if m_sort_opt == "📅 최신 월 순 (기본)":
-            disp_monthly = disp_monthly.sort_values(by="월", ascending=False).reset_index(drop=True)
-        elif m_sort_opt == "📅 과거 월 순 (오름차순)":
-            disp_monthly = disp_monthly.sort_values(by="월", ascending=True).reset_index(drop=True)
-        elif m_sort_opt == "💰 총 매출 높은 순":
-            disp_monthly = disp_monthly.sort_values(by="총 매출", ascending=False).reset_index(drop=True)
-        elif m_sort_opt == "💸 총 광고비 많은 순":
-            disp_monthly = disp_monthly.sort_values(by="총 광고비", ascending=False).reset_index(drop=True)
-        elif m_sort_opt == "🎯 ROAS 높은 순":
-            disp_monthly = disp_monthly.sort_values(by="ROAS", ascending=False).reset_index(drop=True)
+        # [기본 정렬: 최신 월 순, 표 제목 클릭 시 오름차순/내림차순 자유 정렬]
+        disp_monthly = disp_monthly.sort_values(by="월", ascending=False).reset_index(drop=True)
 
         monthly_table_event = st.dataframe(
             disp_monthly,
@@ -1921,8 +1917,8 @@ if "통합 대시보드" in selected_page:
         st.caption("표에서 원하는 연도(행)를 직접 클릭하면 다중 선택 및 체크(`✔`)되며, 하단에 선택 항목의 합계(소계)가 실시간으로 자동 산출됩니다.")
         yearly_df = get_yearly_trend_table(all_dbs)
 
-        # 🛠️ 연도별 실시간 정렬 & 필터링 컨트롤 바
-        y_f_c1, y_f_c2, y_f_c3 = st.columns([1.6, 1.4, 1.0])
+        # 🛠️ 연도별 실시간 필터링 컨트롤 바 (표 헤더 클릭으로 직접 정렬 지원)
+        y_f_c1, y_f_c2 = st.columns([3.0, 1.0])
         with y_f_c1:
             y_search_query = st.text_input(
                 "연도 검색",
@@ -1931,14 +1927,6 @@ if "통합 대시보드" in selected_page:
                 label_visibility="collapsed"
             )
         with y_f_c2:
-            y_sort_opt = st.selectbox(
-                "연도 정렬 순서",
-                ["📅 최신 연도 순 (기본)", "📅 과거 연도 순", "💰 총 매출 높은 순", "💸 총 광고비 많은 순", "🎯 ROAS 높은 순"],
-                index=0,
-                key="sb_y_sort_opt",
-                label_visibility="collapsed"
-            )
-        with y_f_c3:
             y_hide_zero = st.checkbox("0원 연도 제외", value=False, key="chk_yearly_hide_zero")
 
         # [실제 필터링 적용]
@@ -1947,31 +1935,22 @@ if "통합 대시보드" in selected_page:
         if y_hide_zero:
             yearly_df = yearly_df[(yearly_df["총 광고비"] > 0) | (yearly_df["총 매출"] > 0)]
 
-        # [정렬 적용]
-        if y_sort_opt == "📅 최신 연도 순 (기본)":
-            yearly_df = yearly_df.sort_values(by="연도", ascending=False).reset_index(drop=True)
-        elif y_sort_opt == "📅 과거 연도 순":
-            yearly_df = yearly_df.sort_values(by="연도", ascending=True).reset_index(drop=True)
-        elif y_sort_opt == "💰 총 매출 높은 순":
-            yearly_df = yearly_df.sort_values(by="총 매출", ascending=False).reset_index(drop=True)
-        elif y_sort_opt == "💸 총 광고비 많은 순":
-            yearly_df = yearly_df.sort_values(by="총 광고비", ascending=False).reset_index(drop=True)
-        elif y_sort_opt == "🎯 ROAS 높은 순":
-            yearly_df = yearly_df.sort_values(by="ROAS", ascending=False).reset_index(drop=True)
+        # [기본 정렬: 최신 연도 순, 표 제목 클릭 시 오름차순/내림차순 자유 정렬]
+        yearly_df = yearly_df.sort_values(by="연도", ascending=False).reset_index(drop=True)
 
         col_cfg_yearly = {
-            "연도": st.column_config.TextColumn("연도"),
-            "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d"),
-            "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d"),
-            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
-            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
-            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d"),
-            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
-            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
-            "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
-            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
-            "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
+            "연도": st.column_config.TextColumn("연도", width="small"),
+            "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d", width="medium"),
+            "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d", width="medium"),
+            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
+            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
+            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
+            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
+            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
+            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
+            "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
+            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
+            "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
         }
 
         yearly_table_event = st.dataframe(
@@ -2141,8 +2120,8 @@ def render_channel_page(
     with tab_ch_view:
         st.caption("표에서 원하는 행(체크박스)을 직접 클릭하면 다중 선택 및 체크(`✔`)되며, 하단에 선택 항목의 합계(소계)가 실시간으로 자동 산출됩니다.")
 
-        # 🛠️ 실시간 정렬 & 필터링 컨트롤 바
-        ch_c1, ch_c2, ch_c3, ch_c4 = st.columns([1.6, 1.2, 1.3, 0.9])
+        # 🛠️ 실시간 필터링 컨트롤 바 (표 헤더 클릭으로 직접 정렬 지원)
+        ch_c1, ch_c2, ch_c3 = st.columns([1.8, 1.4, 0.8])
         with ch_c1:
             search_ph = "🔍 판매처, 분류, 연월 검색..." if db_key == "DB_매출" else "🔍 캠페인명, 분류, 연월 검색..."
             ch_search_query = st.text_input(
@@ -2162,34 +2141,6 @@ def render_channel_page(
                 label_visibility="collapsed"
             )
         with ch_c3:
-            if db_key == "DB_매출":
-                sort_options = [
-                    "💰 매출액 높은 순 (기본)",
-                    "📦 판매수량 많은 순",
-                    "🚚 배송건수 많은 순",
-                    "🏷️ 객단가 높은 순",
-                    "💳 배송비 많은 순",
-                    "📅 최신 연월 순",
-                    "📅 과거 연월 순"
-                ]
-            else:
-                sort_options = [
-                    "💸 광고비 많은 순 (기본)",
-                    "💰 전환매출 높은 순",
-                    "🎯 ROAS 높은 순",
-                    "⚡ 전환수 많은 순",
-                    "👆 클릭수 많은 순",
-                    "📅 최신 연월 순",
-                    "📅 과거 연월 순"
-                ]
-            ch_sort_opt = st.selectbox(
-                "정렬 기준",
-                sort_options,
-                index=0,
-                key=f"sb_sort_{db_key}",
-                label_visibility="collapsed"
-            )
-        with ch_c4:
             ch_hide_zero = st.checkbox("0원 실적 제외", value=False, key=f"chk_zero_{db_key}")
 
         # 1) 기본 데이터프레임 복사 및 파생 지표 산출
@@ -2235,29 +2186,11 @@ def render_channel_page(
             else:
                 df_disp = df_disp[(df_disp["광고비"] > 0) | (df_disp["전환매출"] > 0)]
 
-        # 5) 1번 정렬 순서 및 선택 정렬 적용
-        if ch_sort_opt in ["💸 광고비 많은 순 (기본)"]:
-            df_disp = df_disp.sort_values(by="광고비", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt in ["💰 매출액 높은 순 (기본)", "💰 전환매출 높은 순"]:
+        # 5) 기본 정렬 적용 (표 제목 클릭 시 오름차순/내림차순 자유 정렬)
+        if db_key == "DB_매출" and "전환매출" in df_disp.columns:
             df_disp = df_disp.sort_values(by="전환매출", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt == "🎯 ROAS 높은 순":
-            df_disp = df_disp.sort_values(by="ROAS", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt == "⚡ 전환수 많은 순":
-            df_disp = df_disp.sort_values(by="전환수", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt == "👆 클릭수 많은 순":
-            df_disp = df_disp.sort_values(by="클릭수", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt == "📦 판매수량 많은 순":
-            df_disp = df_disp.sort_values(by="판매수량", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt == "🚚 배송건수 많은 순":
-            df_disp = df_disp.sort_values(by="배송건수", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt == "🏷️ 객단가 높은 순":
-            df_disp = df_disp.sort_values(by="객단가", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt == "💳 배송비 많은 순":
-            df_disp = df_disp.sort_values(by="배송비", ascending=False).reset_index(drop=True)
-        elif ch_sort_opt == "📅 최신 연월 순":
-            df_disp = df_disp.sort_values(by=["년도", "월"], ascending=[False, False]).reset_index(drop=True)
-        elif ch_sort_opt == "📅 과거 연월 순":
-            df_disp = df_disp.sort_values(by=["년도", "월"], ascending=[True, True]).reset_index(drop=True)
+        elif "광고비" in df_disp.columns:
+            df_disp = df_disp.sort_values(by="광고비", ascending=False).reset_index(drop=True)
 
         # 6) 컬럼 표시 순서 정리
         if db_key == "DB_네이버":
@@ -2274,10 +2207,10 @@ def render_channel_page(
 
         # 7) 컬럼 설정 (회계 서식 및 너비)
         col_cfg_detail = {
-            "월": st.column_config.TextColumn("월"),
-            "마케팅 분류": st.column_config.TextColumn("분류"),
-            "매출분류": st.column_config.TextColumn("판매 채널"),
-            "캠페인 이름": st.column_config.TextColumn("캠페인명"),
+            "월": st.column_config.TextColumn("월", width="small"),
+            "마케팅 분류": st.column_config.TextColumn("분류", width="small"),
+            "매출분류": st.column_config.TextColumn("판매 채널", width="medium"),
+            "캠페인 이름": st.column_config.TextColumn("캠페인명", width="medium"),
             "광고비": st.column_config.NumberColumn("광고비", format="₩%,d"),
             "전환매출": st.column_config.NumberColumn("매출액" if db_key == "DB_매출" else "전환매출", format="₩%,d"),
             "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
