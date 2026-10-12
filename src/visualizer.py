@@ -45,17 +45,14 @@ def format_month_label(m_str: str) -> str:
     return f"{clean_val} "
 
 
-def plot_monthly_revenue_and_cost(monthly_df: pd.DataFrame, metric_mode: str = "💰 광고비 vs 매출 & ROAS") -> go.Figure:
+def plot_monthly_revenue_and_cost(
+    monthly_df: pd.DataFrame,
+    metric_mode: str = "💰 광고비 vs 매출 & ROAS",
+    chart_type: str = "📊 복합 (막대+선)",
+    height: int = 330
+) -> go.Figure:
     """
-    월별 성과 추이를 다양한 지표 필터링 모드로 시각화합니다.
-    제목을 차트 외부로 분리하여 상단 범례와의 텍스트 겹침을 원천 차단합니다.
-
-    Args:
-        monthly_df: 월별 성과 요약 데이터프레임
-        metric_mode: 분석할 지표 조합 (기본: '💰 광고비 vs 매출 & ROAS')
-
-    Returns:
-        go.Figure: Plotly 복합 차트 객체
+    월별 성과 추이를 다양한 지표 필터링 모드와 차트 타입(복합, 꺾은선, 영역형 등), 높이로 시각화합니다.
     """
     fig = go.Figure()
 
@@ -247,7 +244,53 @@ def plot_monthly_revenue_and_cost(monthly_df: pd.DataFrame, metric_mode: str = "
         )
         y1_title, y2_title, y2_fmt = "금액 (원)", "ROAS (배수)", ".2f"
 
+    # 차트 유형 변환 (꺾은선 / 영역형 / 막대 / 복합)
+    c_type_str = str(chart_type).lower()
+    if "꺾은선" in c_type_str or "line" in c_type_str:
+        new_traces = []
+        for tr in fig.data:
+            if isinstance(tr, go.Bar):
+                tr_color = tr.marker.color if hasattr(tr, "marker") and hasattr(tr.marker, "color") else "#00C56F"
+                new_traces.append(
+                    go.Scatter(
+                        x=tr.x,
+                        y=tr.y,
+                        name=tr.name,
+                        mode="lines+markers",
+                        line=dict(width=2.5, color=tr_color),
+                        marker=dict(size=7),
+                        customdata=tr.customdata,
+                        hovertemplate=tr.hovertemplate,
+                        yaxis=getattr(tr, "yaxis", "y")
+                    )
+                )
+            else:
+                new_traces.append(tr)
+        fig.data = new_traces
+    elif "영역" in c_type_str or "area" in c_type_str:
+        new_traces = []
+        for tr in fig.data:
+            if isinstance(tr, go.Bar):
+                tr_color = tr.marker.color if hasattr(tr, "marker") and hasattr(tr.marker, "color") else "#00C56F"
+                new_traces.append(
+                    go.Scatter(
+                        x=tr.x,
+                        y=tr.y,
+                        name=tr.name,
+                        mode="lines",
+                        fill="tozeroy",
+                        line=dict(width=2, color=tr_color),
+                        customdata=tr.customdata,
+                        hovertemplate=tr.hovertemplate,
+                        yaxis=getattr(tr, "yaxis", "y")
+                    )
+                )
+            else:
+                new_traces.append(tr)
+        fig.data = new_traces
+
     fig.update_layout(
+        height=height,
         font=dict(family="Pretendard, -apple-system, sans-serif"),
         title=None,
         barmode="group",
@@ -275,7 +318,7 @@ def plot_monthly_revenue_and_cost(monthly_df: pd.DataFrame, metric_mode: str = "
             showgrid=False,
             tickformat=y2_fmt
         ),
-        margin=dict(l=30, r=30, t=35, b=25),
+        margin=dict(l=25, r=25, t=32, b=25),
         plot_bgcolor="white",
         paper_bgcolor="white"
     )
@@ -331,16 +374,14 @@ def plot_channel_comparison_bar(channel_df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def plot_channel_cost_share(channel_df: pd.DataFrame, metric: str = "광고비") -> go.Figure:
+def plot_channel_cost_share(
+    channel_df: pd.DataFrame,
+    metric: str = "광고비",
+    chart_type: str = "🍩 도넛 차트",
+    height: int = 310
+) -> go.Figure:
     """
-    채널별 광고 성과 비중을 도넛 차트로 시각화합니다 (광고비, 전환매출, 전환수, 클릭수, 노출수 등 동적 전환).
-
-    Args:
-        channel_df: '채널' 및 성과 지표 컬럼을 포함하는 데이터프레임
-        metric: 비중을 계산할 기준 지표 (예: '광고비', '전환매출', '전환수', '클릭수', '노출수')
-
-    Returns:
-        go.Figure: Plotly 도넛 차트 객체
+    채널별 광고 성과 비중을 도넛, 가로 막대, 트리맵 등 다양한 차트 유형과 높이로 시각화합니다.
     """
     df_plot = channel_df[channel_df["채널"] != "매출(전체)"].copy()
     color_map = {
@@ -357,47 +398,97 @@ def plot_channel_cost_share(channel_df: pd.DataFrame, metric: str = "광고비")
     unit_str = "원" if is_currency else ("건" if "전환수" in target_col else "회")
     fmt_prefix = "₩" if is_currency else ""
 
-    fig = go.Figure(
-        data=[
-            go.Pie(
+    c_type_clean = str(chart_type).lower()
+
+    # 1. 가로 막대 차트 (모바일 가독성 최강)
+    if "막대" in c_type_clean or "바" in c_type_clean:
+        df_sorted = df_plot.sort_values(by=target_col, ascending=True).copy()
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    x=df_sorted[target_col],
+                    y=df_sorted["채널"],
+                    orientation="h",
+                    marker=dict(color=[color_map.get(ch, "#a4b0be") for ch in df_sorted["채널"]]),
+                    text=[f"{fmt_prefix}{v:,.0f}{unit_str}" for v in df_sorted[target_col]],
+                    textposition="auto",
+                    insidetextfont=dict(color="#ffffff", size=12, family="Pretendard, sans-serif"),
+                    outsidetextfont=dict(color="#06291B", size=11, family="Pretendard, sans-serif"),
+                    hovertemplate=f"%{{y}}<br>{target_col}: {fmt_prefix}%{{x:,.0f}}{unit_str}<extra></extra>"
+                )
+            ]
+        )
+        fig.update_layout(
+            height=height,
+            font=dict(family="Pretendard, -apple-system, sans-serif"),
+            margin=dict(l=20, r=20, t=15, b=20),
+            xaxis=dict(showgrid=True, gridcolor="#EDF2EE", title=None, tickformat=",.0f"),
+            yaxis=dict(showgrid=False, title=None),
+            plot_bgcolor="white",
+            paper_bgcolor="white"
+        )
+        return fig
+
+    # 2. 트리맵 차트 (모던 면적형)
+    elif "트리맵" in c_type_clean or "tree" in c_type_clean:
+        fig = go.Figure(
+            go.Treemap(
                 labels=df_plot["채널"],
+                parents=[""] * len(df_plot),
                 values=df_plot[target_col],
-                customdata=df_plot["채널"],
-                hole=0.45,
                 marker=dict(colors=[color_map.get(ch, "#a4b0be") for ch in df_plot["채널"]]),
-                textinfo="label+percent",
-                textposition="inside",
-                insidetextfont=dict(color="#ffffff", size=13, family="Pretendard, sans-serif"),
-                outsidetextfont=dict(color="#06291B", size=12, family="Pretendard, sans-serif"),
-                textfont=dict(color="#ffffff", size=13, family="Pretendard, sans-serif"),
-                hovertemplate=f"%{{label}}<br>{target_col}: {fmt_prefix}%{{value:,.0f}}{unit_str} (%{{percent}})<extra></extra>"
+                textinfo="label+value+percent root",
+                hovertemplate=f"%{{label}}<br>{target_col}: {fmt_prefix}%{{value:,.0f}}{unit_str}<extra></extra>"
             )
-        ]
-    )
+        )
+        fig.update_layout(
+            height=height,
+            margin=dict(l=10, r=10, t=15, b=10),
+            font=dict(family="Pretendard, -apple-system, sans-serif")
+        )
+        return fig
 
-    fig.update_layout(
-        font=dict(family="Pretendard, -apple-system, sans-serif"),
-        title=None,
-        clickmode="event+select",
-        legend=dict(orientation="h", yanchor="top", y=-0.08, xanchor="center", x=0.5),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(l=20, r=20, t=20, b=40)
-    )
+    # 3. 도넛 / 파이 차트
+    else:
+        hole_val = 0.0 if "파이" in c_type_clean else 0.45
+        fig = go.Figure(
+            data=[
+                go.Pie(
+                    labels=df_plot["채널"],
+                    values=df_plot[target_col],
+                    customdata=df_plot["채널"],
+                    hole=hole_val,
+                    marker=dict(colors=[color_map.get(ch, "#a4b0be") for ch in df_plot["채널"]]),
+                    textinfo="label+percent",
+                    textposition="inside",
+                    insidetextfont=dict(color="#ffffff", size=13, family="Pretendard, sans-serif"),
+                    outsidetextfont=dict(color="#06291B", size=12, family="Pretendard, sans-serif"),
+                    textfont=dict(color="#ffffff", size=13, family="Pretendard, sans-serif"),
+                    hovertemplate=f"%{{label}}<br>{target_col}: {fmt_prefix}%{{value:,.0f}}{unit_str} (%{{percent}})<extra></extra>"
+                )
+            ]
+        )
+        fig.update_layout(
+            height=height,
+            font=dict(family="Pretendard, -apple-system, sans-serif"),
+            title=None,
+            clickmode="event+select",
+            legend=dict(orientation="h", yanchor="top", y=-0.08, xanchor="center", x=0.5),
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            margin=dict(l=15, r=15, t=15, b=30)
+        )
+        return fig
 
-    return fig
 
-
-def plot_sales_channel_share(sales_df: pd.DataFrame, metric: str = "매출액") -> go.Figure:
+def plot_sales_channel_share(
+    sales_df: pd.DataFrame,
+    metric: str = "매출액",
+    chart_type: str = "🍩 도넛 차트",
+    height: int = 310
+) -> go.Figure:
     """
-    판매 채널별 실적 비중을 도넛 차트로 시각화합니다 (매출액, 판매수량, 배송건수, 배송비, 객단가 등 동적 전환).
-
-    Args:
-        sales_df: '판매 채널' 및 실적 컬럼을 포함하는 데이터프레임
-        metric: 비중을 계산할 기준 지표 (예: '매출액', '판매수량', '배송건수', '배송비', '객단가')
-
-    Returns:
-        go.Figure: Plotly 도넛 차트 객체
+    판매 채널별 실적 비중을 도넛, 가로 막대, 트리맵 등 다양한 차트 유형과 높이로 시각화합니다.
     """
     if sales_df.empty or "판매 채널" not in sales_df.columns:
         return go.Figure()
@@ -426,48 +517,92 @@ def plot_sales_channel_share(sales_df: pd.DataFrame, metric: str = "매출액") 
     unit_str = "원" if is_currency else ("개" if "수량" in target_col else "건")
     fmt_prefix = "₩" if is_currency else ""
 
-    fig = go.Figure(
-        data=[
-            go.Pie(
+    c_type_clean = str(chart_type).lower()
+
+    # 1. 가로 막대 차트 (모바일 최적화)
+    if "막대" in c_type_clean or "바" in c_type_clean:
+        df_sorted = df_plot.sort_values(by=target_col, ascending=True).copy()
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    x=df_sorted[target_col],
+                    y=df_sorted["판매 채널"],
+                    orientation="h",
+                    marker=dict(colors=channel_colors[:len(df_sorted)]),
+                    text=[f"{fmt_prefix}{v:,.0f}{unit_str}" for v in df_sorted[target_col]],
+                    textposition="auto",
+                    insidetextfont=dict(color="#ffffff", size=11, family="Pretendard, sans-serif"),
+                    outsidetextfont=dict(color="#06291B", size=11, family="Pretendard, sans-serif"),
+                    hovertemplate=f"%{{y}}<br>{target_col}: {fmt_prefix}%{{x:,.0f}}{unit_str}<extra></extra>"
+                )
+            ]
+        )
+        fig.update_layout(
+            height=height,
+            font=dict(family="Pretendard, -apple-system, sans-serif"),
+            margin=dict(l=20, r=20, t=15, b=20),
+            xaxis=dict(showgrid=True, gridcolor="#EDF2EE", title=None, tickformat=",.0f"),
+            yaxis=dict(showgrid=False, title=None),
+            plot_bgcolor="white",
+            paper_bgcolor="white"
+        )
+        return fig
+
+    # 2. 트리맵 차트 (면적형)
+    elif "트리맵" in c_type_clean or "tree" in c_type_clean:
+        fig = go.Figure(
+            go.Treemap(
                 labels=df_plot["판매 채널"],
+                parents=[""] * len(df_plot),
                 values=df_plot[target_col],
-                customdata=df_plot["판매 채널"],
-                hole=0.45,
                 marker=dict(colors=channel_colors[:len(df_plot)]),
-                textinfo="label+percent",
-                textposition="inside",
-                insidetextfont=dict(color="#ffffff", size=12, family="Pretendard, sans-serif"),
-                outsidetextfont=dict(color="#06291B", size=11, family="Pretendard, sans-serif"),
-                textfont=dict(color="#ffffff", size=12, family="Pretendard, sans-serif"),
-                hovertemplate=f"%{{label}}<br>{target_col}: {fmt_prefix}%{{value:,.0f}}{unit_str} (%{{percent}})<extra></extra>"
+                textinfo="label+value+percent root",
+                hovertemplate=f"%{{label}}<br>{target_col}: {fmt_prefix}%{{value:,.0f}}{unit_str}<extra></extra>"
             )
-        ]
-    )
+        )
+        fig.update_layout(
+            height=height,
+            margin=dict(l=10, r=10, t=15, b=10),
+            font=dict(family="Pretendard, -apple-system, sans-serif")
+        )
+        return fig
 
-    fig.update_layout(
-        font=dict(family="Pretendard, -apple-system, sans-serif"),
-        title=None,
-        clickmode="event+select",
-        legend=dict(orientation="h", yanchor="top", y=-0.08, xanchor="center", x=0.5),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(l=20, r=20, t=20, b=40)
-    )
+    # 3. 도넛 / 파이 차트
+    else:
+        hole_val = 0.0 if "파이" in c_type_clean else 0.45
+        fig = go.Figure(
+            data=[
+                go.Pie(
+                    labels=df_plot["판매 채널"],
+                    values=df_plot[target_col],
+                    customdata=df_plot["판매 채널"],
+                    hole=hole_val,
+                    marker=dict(colors=channel_colors[:len(df_plot)]),
+                    textinfo="label+percent",
+                    textposition="inside",
+                    insidetextfont=dict(color="#ffffff", size=12, family="Pretendard, sans-serif"),
+                    outsidetextfont=dict(color="#06291B", size=11, family="Pretendard, sans-serif"),
+                    textfont=dict(color="#ffffff", size=12, family="Pretendard, sans-serif"),
+                    hovertemplate=f"%{{label}}<br>{target_col}: {fmt_prefix}%{{value:,.0f}}{unit_str} (%{{percent}})<extra></extra>"
+                )
+            ]
+        )
+        fig.update_layout(
+            height=height,
+            font=dict(family="Pretendard, -apple-system, sans-serif"),
+            title=None,
+            clickmode="event+select",
+            legend=dict(orientation="h", yanchor="top", y=-0.08, xanchor="center", x=0.5),
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            margin=dict(l=15, r=15, t=15, b=30)
+        )
+        return fig
 
-    return fig
 
-
-def plot_pie_category(df: pd.DataFrame, category_col: str, value_col: str) -> go.Figure:
+def plot_pie_category(df: pd.DataFrame, category_col: str, value_col: str, height: int = 310) -> go.Figure:
     """
     특정 카테고리 컬럼을 기준으로 값의 분포를 도넛 차트로 나타냅니다.
-
-    Args:
-        df: 데이터프레임
-        category_col: 분류 기준 컬럼 (예: '마케팅 분류' or '매출분류')
-        value_col: 집계할 값 컬럼 (예: '광고비' or '전환매출')
-
-    Returns:
-        go.Figure: 도넛 차트 객체
     """
     if df.empty or category_col not in df.columns or value_col not in df.columns:
         return go.Figure()
@@ -489,10 +624,11 @@ def plot_pie_category(df: pd.DataFrame, category_col: str, value_col: str) -> go
     )
 
     fig.update_layout(
+        height=height,
         font=dict(family="Pretendard, -apple-system, sans-serif"),
         title=None,
         legend=dict(orientation="h", yanchor="top", y=-0.10, xanchor="center", x=0.5),
-        margin=dict(l=20, r=20, t=20, b=40),
+        margin=dict(l=15, r=15, t=15, b=30),
         plot_bgcolor="white",
         paper_bgcolor="white"
     )
@@ -500,16 +636,9 @@ def plot_pie_category(df: pd.DataFrame, category_col: str, value_col: str) -> go
     return fig
 
 
-def plot_channel_trend_line(df: pd.DataFrame, metric_cols: List[str]) -> go.Figure:
+def plot_channel_trend_line(df: pd.DataFrame, metric_cols: List[str], height: int = 310) -> go.Figure:
     """
     단일 채널의 월별 주요 메트릭 추이를 다중 라인 차트로 표현합니다.
-
-    Args:
-        df: 해당 채널의 데이터프레임
-        metric_cols: 시각화할 수치 컬럼 목록 (예: ['광고비', '전환매출'])
-
-    Returns:
-        go.Figure: 다중 라인 차트 객체
     """
     if df.empty or "월" not in df.columns:
         return go.Figure()
@@ -534,6 +663,7 @@ def plot_channel_trend_line(df: pd.DataFrame, metric_cols: List[str]) -> go.Figu
         )
 
     fig.update_layout(
+        height=height,
         font=dict(family="Pretendard, -apple-system, sans-serif"),
         title=None,
         xaxis=dict(
@@ -545,9 +675,9 @@ def plot_channel_trend_line(df: pd.DataFrame, metric_cols: List[str]) -> go.Figu
         ),
         yaxis=dict(title="수치", gridcolor=COLORS["그리드"], tickformat=",.0f"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        margin=dict(l=25, r=25, t=30, b=25),
         plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(l=30, r=30, t=35, b=25)
+        paper_bgcolor="white"
     )
 
     return fig

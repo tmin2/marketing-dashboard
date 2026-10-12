@@ -1641,10 +1641,43 @@ if "통합 대시보드" in selected_page:
         render_google_kpi_card("통합 CVR", format_accounting(kpis["통합 CVR"], unit="%"), "전환수 / 클릭수", "#0284C7")
 
     # ------------------------------------------------
-    # [3] 시각화 차트 (지표별 필터링 pills 및 차트 클릭 지원)
+    # [3] 시각화 차트 (크기 조절, 차트 유형 선택, 지표별 필터링 pills 지원)
     # ------------------------------------------------
     monthly_df = get_monthly_trend_table(all_dbs, target_year=selected_year)
     channel_df = get_channel_performance_table(all_dbs, target_year=selected_year, target_month=selected_month)
+
+    # 🎛️ 그래프 뷰어 스마트 컨트롤 바 (사이즈 조절 & 차트 타입 선택)
+    chart_ctl_box = st.container()
+    with chart_ctl_box:
+        ctl_c1, ctl_c2, ctl_c3 = st.columns([1.3, 1.4, 1.4])
+        with ctl_c1:
+            size_choice = st.pills(
+                "📐 그래프 크기",
+                ["📱 컴팩트 (260px)", "💻 기본 (330px)", "🖥️ 와이드 (440px)"],
+                default=st.session_state.get("chart_size_mode", "💻 기본 (330px)"),
+                key="pill_chart_size"
+            )
+            st.session_state["chart_size_mode"] = size_choice or "💻 기본 (330px)"
+            chart_h_map = {"📱 컴팩트 (260px)": 260, "💻 기본 (330px)": 330, "🖥️ 와이드 (440px)": 440}
+            chart_h = chart_h_map.get(st.session_state["chart_size_mode"], 330)
+
+        with ctl_c2:
+            monthly_chart_type = st.selectbox(
+                "📈 추이 차트 유형",
+                ["📊 복합 차트 (막대+선)", "📈 꺾은선 차트 (Line)", "📶 영역형 차트 (Area)"],
+                index=0,
+                key="sb_monthly_chart_type"
+            )
+
+        with ctl_c3:
+            share_chart_type = st.selectbox(
+                "🍩 비중 차트 유형",
+                ["🍩 도넛 차트", "📊 가로 막대 (모바일 추천)", "🌲 트리맵 (면적형)", "🥧 원형 파이"],
+                index=0,
+                key="sb_share_chart_type"
+            )
+
+    st.markdown("<div style='margin-top: 6px;'></div>", unsafe_allow_html=True)
 
     g1, g2 = st.columns([1.6, 1.0])
     with g1:
@@ -1663,7 +1696,12 @@ if "통합 대시보드" in selected_page:
             label_visibility="collapsed"
         )
         chart_monthly_event = st.plotly_chart(
-            plot_monthly_revenue_and_cost(monthly_df, metric_mode=selected_monthly_metric or "💰 광고비 vs 매출 & ROAS"),
+            plot_monthly_revenue_and_cost(
+                monthly_df,
+                metric_mode=selected_monthly_metric or "💰 광고비 vs 매출 & ROAS",
+                chart_type=monthly_chart_type,
+                height=chart_h
+            ),
             use_container_width=True,
             key="chart_monthly_main",
             on_select="rerun"
@@ -1679,7 +1717,12 @@ if "통합 대시보드" in selected_page:
             label_visibility="collapsed"
         )
         chart_share_event = st.plotly_chart(
-            plot_channel_cost_share(channel_df, metric=selected_ad_metric or "💸 광고비"),
+            plot_channel_cost_share(
+                channel_df,
+                metric=selected_ad_metric or "💸 광고비",
+                chart_type=share_chart_type,
+                height=chart_h
+            ),
             use_container_width=True,
             key="chart_share_main",
             on_select="rerun"
@@ -1801,7 +1844,12 @@ if "통합 대시보드" in selected_page:
             label_visibility="collapsed"
         )
         st.plotly_chart(
-            plot_sales_channel_share(sales_channel_df, metric=selected_sales_metric or "💰 매출액"),
+            plot_sales_channel_share(
+                sales_channel_df,
+                metric=selected_sales_metric or "💰 매출액",
+                chart_type=share_chart_type,
+                height=chart_h
+            ),
             use_container_width=True,
             key="chart_sales_channel_share"
         )
@@ -2173,14 +2221,17 @@ def render_channel_page(
         with m5:
             render_google_kpi_card("CPA", format_accounting(cpa, is_currency=True), "전환당 비용", theme_color)
 
-    # 2. 상단 차트 (외부 헤더 분리로 범례 겹침 원천 차단)
+    # 2. 상단 차트 (동적 높이 조절 적용)
+    cur_chart_h = {"📱 컴팩트 (260px)": 260, "💻 기본 (330px)": 330, "🖥️ 와이드 (440px)": 440}.get(
+        st.session_state.get("chart_size_mode", "💻 기본 (330px)"), 330
+    )
     clean_name = channel_display_name.replace("💚", "").replace("🚀", "").replace("🔵", "").replace("💰", "").strip()
     gc1, gc2 = st.columns([1, 1.2])
     with gc1:
         if cat_column and cat_column in fdf.columns:
             st.markdown(f"<h3>{clean_name} 분류별 비중</h3>", unsafe_allow_html=True)
             st.plotly_chart(
-                plot_pie_category(fdf, category_col=cat_column, value_col="전환매출" if db_key == "DB_매출" else "광고비"),
+                plot_pie_category(fdf, category_col=cat_column, value_col="전환매출" if db_key == "DB_매출" else "광고비", height=cur_chart_h),
                 use_container_width=True,
                 key=f"chart_pie_{db_key}"
             )
@@ -2189,14 +2240,14 @@ def render_channel_page(
             m_grp["ROAS"] = m_grp["전환매출"] / m_grp["광고비"].replace(0, 1)
             st.markdown(f"<h3>{clean_name} 월별 ROAS 추이</h3>", unsafe_allow_html=True)
             st.plotly_chart(
-                plot_channel_trend_line(m_grp, metric_cols=["ROAS"]),
+                plot_channel_trend_line(m_grp, metric_cols=["ROAS"], height=cur_chart_h),
                 use_container_width=True,
                 key=f"chart_roas_{db_key}"
             )
     with gc2:
         st.markdown(f"<h3>{clean_name} 월별 실적 추이</h3>", unsafe_allow_html=True)
         st.plotly_chart(
-            plot_channel_trend_line(df_raw, metric_cols=["전환매출", "광고비"] if db_key != "DB_매출" else ["전환매출", "판매수량"]),
+            plot_channel_trend_line(df_raw, metric_cols=["전환매출", "광고비"] if db_key != "DB_매출" else ["전환매출", "판매수량"], height=cur_chart_h),
             use_container_width=True,
             key=f"chart_trend_{db_key}"
         )
