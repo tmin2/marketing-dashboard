@@ -216,15 +216,55 @@ st.markdown("""
         font-weight: 700 !important;
         font-size: 0.88rem !important;
     }
-    /* 셀렉트박스 및 버튼 테두리 라벤더 테마 매칭 */
+    /* 📌 기준 연도 / 기준 월 셀렉트박스 - 전체 매출 버튼과 동일한 딥 네이비 테마 적용 */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] > div {
+        background: linear-gradient(135deg, #1E293A 0%, #312E81 100%) !important;
+        border: 1.5px solid #1E293A !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(30, 41, 58, 0.25) !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] > div:hover {
+        background: linear-gradient(135deg, #2D3748 0%, #3730A3 100%) !important;
+        border-color: #4F46E5 !important;
+        box-shadow: 0 4px 12px rgba(49, 46, 129, 0.35) !important;
+        transform: translateY(-1px) !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] * {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] svg {
+        color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] svg path {
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] input {
+        color: #FFFFFF !important;
+    }
+
+    /* 드롭다운 옵션 팝업 리스트 스타일 (열렸을 때 가독성 보장) */
+    div[data-baseweb="popover"] ul[role="listbox"] {
         background-color: #FFFFFF !important;
         border: 1.5px solid #C4B5FD !important;
         border-radius: 8px !important;
+        box-shadow: 0 4px 18px rgba(30, 41, 58, 0.15) !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] * {
+    div[data-baseweb="popover"] li[role="option"] {
+        background-color: #FFFFFF !important;
         color: #1E293A !important;
         font-weight: 600 !important;
+        transition: background 0.15s ease !important;
+    }
+    div[data-baseweb="popover"] li[role="option"]:hover,
+    div[data-baseweb="popover"] li[role="option"][aria-selected="true"] {
+        background-color: #ECE9FD !important;
+        color: #5B20B6 !important;
+        font-weight: 700 !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-testid="stPopover"] button,
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stButton > button {
