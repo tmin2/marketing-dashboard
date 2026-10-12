@@ -181,12 +181,20 @@ st.markdown("""
         border: none !important;
         border-bottom: 1px solid #DFE7E2 !important;
         box-shadow: 0 4px 20px rgba(6, 41, 27, 0.08) !important;
-        padding: 8px 2.0rem 6px 2.0rem !important;
+        padding: 6px 2.0rem 6px 2.0rem !important;
         box-sizing: border-box !important;
         border-radius: 0 !important;
     }
 
-    /* 헤더 내부 테두리 및 패딩 초기화 */
+    /* 상단 고정 앵커 컨테이너 자체를 완전 무높이 처리 (위쪽 빈 공간 원천 제거) */
+    div[data-testid="element-container"]:has(.fixed-top-nav-anchor) {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 헤더 내부 테두리 및 패딩 초기화 & 간격 초밀착 */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) {
         border: none !important;
         border-bottom: 1px solid #DFE7E2 !important;
@@ -194,6 +202,12 @@ st.markdown("""
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) > div {
         padding: 0 !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-testid="stVerticalBlock"] {
+        gap: 0 !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-testid="element-container"] {
+        margin: 0 !important;
     }
 
     /* ======================================================= */
@@ -408,36 +422,49 @@ st.markdown("""
         }
         /* 메인 컨테이너 최상단 및 좌우 여백 모바일 슬림화 */
         .block-container {
-            padding-top: 8px !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-top: 4px !important;
+            padding-left: 0.4rem !important;
+            padding-right: 0.4rem !important;
         }
-        /* 모바일에서 상단바가 화면의 절반을 가리지 않도록 relative 배치 및 여백 축소 */
+        /* 모바일에서 상단바가 화면의 절반을 가리지 않도록 relative 배치 및 상하 여백 극소화 */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) {
             position: relative !important;
-            padding: 6px 8px !important;
-            margin-bottom: 6px !important;
-            border-radius: 10px !important;
-            box-shadow: 0 1px 6px rgba(6, 41, 27, 0.05) !important;
+            padding: 4px 6px !important;
+            margin-bottom: 4px !important;
+            border-radius: 8px !important;
+            box-shadow: 0 1px 4px rgba(6, 41, 27, 0.04) !important;
         }
-        /* 타이틀 축소 및 서브캡션 완전 숨김 (헤더 높이 대폭 절약) */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stVerticalBlock"] {
+            gap: 2px !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stHorizontalBlock"] {
+            gap: 2px !important;
+            margin: 0 !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stColumn"] {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* 📌 타이틀 위아래 여백 완전 최소화 (여백 낭비 박멸) */
         h1.main-dashboard-title {
-            font-size: 1.12rem !important;
-            line-height: 1.2 !important;
-            margin: 0 0 2px 0 !important;
+            font-size: 1.05rem !important;
+            line-height: 1.15 !important;
+            margin: 0 !important;
+            padding: 0 !important;
             letter-spacing: -0.4px !important;
         }
         p.sub-caption {
             display: none !important;
         }
 
-        /* 📌 상단 컨트롤 4개 (연도, 월, 백업, 접기) 모바일 2x2 그리드 칼배치! */
+        /* 📌 상단 컨트롤 4개 (연도, 월, 백업, 접기) 모바일 2x2 그리드 칼배치 */
         div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stHorizontalBlock"] {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
-            gap: 5px !important;
+            gap: 4px !important;
             width: 100% !important;
-            margin: 3px 0 !important;
+            margin: 2px 0 !important;
         }
         div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
             width: 100% !important;
@@ -447,7 +474,7 @@ st.markdown("""
             padding: 0 !important;
         }
         div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) label {
-            font-size: 0.72rem !important;
+            font-size: 0.70rem !important;
             font-weight: 600 !important;
             margin-bottom: 1px !important;
             min-height: auto !important;
@@ -456,28 +483,28 @@ st.markdown("""
             color: #4B6356 !important;
         }
         div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stSelectbox"] div[data-baseweb="select"] {
-            min-height: 32px !important;
-            height: 32px !important;
+            min-height: 30px !important;
+            height: 30px !important;
             padding: 0 4px !important;
         }
         div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stSelectbox"] div[data-baseweb="select"] * {
-            font-size: 0.80rem !important;
+            font-size: 0.78rem !important;
         }
         div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) button {
-            min-height: 32px !important;
-            height: 32px !important;
-            font-size: 0.78rem !important;
+            min-height: 30px !important;
+            height: 30px !important;
+            font-size: 0.76rem !important;
             padding: 0 4px !important;
             margin: 0 !important;
         }
 
-        /* 📌 메뉴 선택 탭 3열 2행 모던 앱 스타일 칩 버튼 */
+        /* 📌 모바일 메뉴 탭: 3열 2행 앱 스타일 칩 버튼 & 네이버/쿠팡/메타 광고 2번째 줄 배치 */
         div[role="radiogroup"][aria-label="메뉴 선택"] {
             display: grid !important;
             grid-template-columns: repeat(3, 1fr) !important;
             gap: 3px !important;
             padding: 3px !important;
-            margin-top: 4px !important;
+            margin-top: 3px !important;
             margin-bottom: 2px !important;
             background-color: #F1F5F3 !important;
             border-radius: 8px !important;
@@ -485,8 +512,8 @@ st.markdown("""
         div[role="radiogroup"][aria-label="메뉴 선택"] label {
             padding: 4px 1px !important;
             margin: 0 !important;
-            min-height: 30px !important;
-            height: 30px !important;
+            min-height: 29px !important;
+            height: 29px !important;
             border-radius: 6px !important;
             display: flex !important;
             align-items: center !important;
@@ -499,7 +526,7 @@ st.markdown("""
             display: none !important;
         }
         div[role="radiogroup"][aria-label="메뉴 선택"] label p {
-            font-size: 0.71rem !important;
+            font-size: 0.70rem !important;
             font-weight: 700 !important;
             margin: 0 !important;
             line-height: 1.15 !important;
@@ -507,6 +534,26 @@ st.markdown("""
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
+        }
+
+        /* [모바일 전용 정렬] 1번째 줄: 종합/매출/관리, 2번째 줄: 3대 광고 매체 (네이버, 쿠팡, 메타) */
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="통합 대시보드"]) {
+            order: 1 !important;
+        }
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="전체 매출"]) {
+            order: 2 !important;
+        }
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="데이터 관리"]) {
+            order: 3 !important;
+        }
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="네이버"]) {
+            order: 4 !important;
+        }
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="쿠팡"]) {
+            order: 5 !important;
+        }
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:has(input[value*="메타"]) {
+            order: 6 !important;
         }
 
         /* 스마트 안내 캡션 박스 숨김 (모바일 화면 대폭 절약) */
@@ -705,10 +752,14 @@ st.markdown("""
         border-color: #00C56F !important;
         background-color: #F6FCF9 !important;
     }
-    /* 파일 드롭존 하단 200MB 안내 텍스트 숨김 (업로드 버튼 옆으로 이전) */
+    /* 파일 드롭존 내부 기본 200MB 및 형식 안내 텍스트 완전 숨김 (업로드 버튼 옆으로 이전) */
     div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] small,
-    div[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"] small {
+    div[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"],
+    div[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"] * {
         display: none !important;
+        visibility: hidden !important;
+        font-size: 0 !important;
+        height: 0 !important;
     }
     /* 업로드 버튼 옆에 연하고 작은 글씨로 (최대 200MB) 표시 */
     div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] button::after {
@@ -1248,10 +1299,10 @@ with nav_container:
 
         with top_col1:
             st.markdown("""
-            <h1 class='main-dashboard-title' style='font-size: 2.15rem !important; font-weight: 800 !important; color: #06291B !important; margin: 0 0 3px 0 !important; line-height: 1.25 !important; letter-spacing: -0.8px !important; display: block !important;'>
+            <h1 class='main-dashboard-title' style='font-size: 1.95rem !important; font-weight: 800 !important; color: #06291B !important; margin: 0 !important; line-height: 1.15 !important; letter-spacing: -0.6px !important; display: block !important;'>
                 📈 마케팅 통합 성과 대시보드
             </h1>
-            <p class='sub-caption' style='margin-bottom: 0.35rem !important;'>
+            <p class='sub-caption' style='margin: 1px 0 0 0 !important; font-size: 0.88rem !important; line-height: 1.2 !important;'>
                 마케팅 종합 성과 & 네이버·쿠팡·메타 원본 보고서 자동 연동 시스템
             </p>
             """, unsafe_allow_html=True)
@@ -1419,98 +1470,7 @@ else:
 if "통합 대시보드" in selected_page:
 
     # ------------------------------------------------
-    # [1] 스마트 파일 업로드 & 연동 영역 (줄 분리 완료)
-    # ------------------------------------------------
-    with st.expander("📂 **엑셀 / CSV 보고서 파일 업로드 및 자동 반영**", expanded=True):
-        st.markdown("""
-        **광고센터(네이버, 쿠팡, 메타)에서 다운로드한 원본 엑셀/CSV를 그대로 올리셔도 자동으로 양식을 감지하여 변환합니다.**
-        """)
-
-        # 1행: 설정 옵션 (파일 종류, 귀속 연월, 반영 방식 - 칼정렬 50% : 25% : 25%)
-        opt_c1, opt_c2, opt_c3 = st.columns([2.0, 1.0, 1.0])
-
-        with opt_c1:
-            db_type_choices = [
-                "자동 감지 (통합 엑셀 / 원본 보고서)",
-                "네이버 광고",
-                "쿠팡 광고",
-                "메타 광고",
-                "전체 매출"
-            ]
-            db_key_mapping = {
-                "자동 감지 (통합 엑셀 / 원본 보고서)": "자동 감지",
-                "네이버 광고": "DB_네이버",
-                "쿠팡 광고": "DB_쿠팡",
-                "메타 광고": "DB_메타",
-                "전체 매출": "DB_매출"
-            }
-            selected_choice = st.selectbox("파일 종류 선택", db_type_choices)
-            selected_db_type = db_key_mapping[selected_choice]
-
-        with opt_c2:
-            default_m_str = selected_month if (selected_month and selected_month.startswith(f"{selected_year}-")) else f"{selected_year}-01"
-            input_period = st.text_input("귀속 연월 (YYYY-MM)", value=default_m_str)
-            try:
-                p_parts = input_period.strip().split("-")
-                attr_year = int(p_parts[0])
-                attr_month = f"{p_parts[0]}-{p_parts[1].zfill(2)}"
-            except Exception:
-                attr_year = selected_year
-                attr_month = f"{selected_year}-01"
-
-        with opt_c3:
-            import_mode_choice = st.radio("반영 방식", ["🔄 덮어쓰기", "➕ 누적 추가"], index=1, horizontal=True)
-            mode_param = "append" if "누적" in import_mode_choice else "overwrite"
-
-        st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-
-        # 2행: 파일 선택 드래그앤드롭 + 즉시 적용 버튼 + 연동 방식 안내 (칼정렬 50% : 25% : 25%)
-        file_c1, file_c2, file_c3 = st.columns([2.0, 1.0, 1.0])
-        with file_c1:
-            uploaded_file = st.file_uploader(
-                "보고서 파일 선택 (.xlsx, .xls, .csv)",
-                type=["xlsx", "xls", "csv"],
-                key="main_uploader"
-            )
-
-        with file_c2:
-            st.markdown('<div class="upload-apply-label">즉시 실행</div>', unsafe_allow_html=True)
-            apply_clicked = st.button("🚀 데이터 즉시 적용", type="primary", use_container_width=True, key="btn_apply_upload")
-
-        with file_c3:
-            st.markdown('<div class="upload-apply-label">연동 방식 안내</div>', unsafe_allow_html=True)
-            st.markdown("""
-            <div class="upload-info-box">
-                <div style="font-size: 0.85rem; color: #444746; line-height: 1.45;">
-                    • <b>덮어쓰기</b>: 해당 연월 데이터 교체<br>
-                    • <b>누적 추가</b>: 기존 데이터 보존 누적
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        if apply_clicked:
-            if uploaded_file is None:
-                st.warning("⚠️ 업로드할 보고서 파일(.xlsx, .csv)을 먼저 선택해주세요.")
-            else:
-                with st.spinner("보고서를 분석하여 데이터에 반영 중입니다..."):
-                    f_bytes = uploaded_file.read()
-                    success, msg, counts = process_uploaded_file_v2(
-                        file_bytes=f_bytes,
-                        filename=uploaded_file.name,
-                        selected_db_type=selected_db_type,
-                        target_year=attr_year,
-                        target_month=attr_month,
-                        import_mode=mode_param
-                    )
-                    if success:
-                        st.success(f"✅ {msg}")
-                        st.toast("데이터가 성공적으로 업데이트되었습니다!", icon="🎉")
-                        st.rerun()
-                    else:
-                        st.error(f"❌ {msg}")
-
-    # ------------------------------------------------
-    # [2] 핵심 KPI 요약 카드 (폰트 2포인트 확대 & 회계 서식 적용)
+    # [1] 핵심 KPI 요약 카드 (폰트 2포인트 확대 & 회계 서식 적용)
     # ------------------------------------------------
     if selected_month:
         # 월 선택 시 연도와 월을 함께 표시하되 중복 없이 자연스러운 한국어 표기 (예: 2027년 1월)
@@ -2482,7 +2442,104 @@ elif "매출" in selected_page:
 # ====================================================
 elif "데이터 관리" in selected_page:
     st.markdown("<h2>🛠️ 데이터 관리</h2>", unsafe_allow_html=True)
-    st.caption("등록된 데이터 상태 확인, 특정 기간 일괄 삭제, 전체 초기화 및 샘플 복원을 관리합니다.")
+    st.caption("새로운 광고/매출 보고서 파일 업로드 및 자동 반영, 등록 현황 확인, 일괄 삭제 및 복원을 관리합니다.")
+
+    # ------------------------------------------------
+    # [1] 스마트 파일 업로드 & 자동 연동 영역 (데이터 관리 최상단)
+    # ------------------------------------------------
+    with st.expander("📂 **엑셀 / CSV 보고서 파일 업로드 및 자동 반영**", expanded=True):
+        st.markdown("""
+        **💡 광고 및 매출 보고서 자동 연동 안내**
+        * **보고서 원본 호환**: 네이버 검색광고/GFA, 쿠팡 매출성장/검색광고, 메타 광고관리자, 스마트스토어/오픈마켓 정산 엑셀을 수정 없이 원본 그대로 업로드하시면 자동으로 양식을 감지하여 변환합니다.
+        * **반영 방식 안내**: 
+          - **➕ 누적 추가 (기본)**: 기존 데이터를 안전하게 보존하면서 새로운 데이터를 덧붙여 누적 집계합니다.
+          - **🔄 덮어쓰기**: 선택하신 귀속 연월의 해당 채널 데이터를 새로 올린 파일로 완전히 교체합니다.
+        """)
+
+        # 1행: 설정 옵션 (파일 종류, 귀속 연월, 반영 방식 - 칼정렬 50% : 25% : 25%)
+        opt_c1, opt_c2, opt_c3 = st.columns([2.0, 1.0, 1.0])
+
+        with opt_c1:
+            db_type_choices = [
+                "자동 감지 (통합 엑셀 / 원본 보고서)",
+                "네이버 광고",
+                "쿠팡 광고",
+                "메타 광고",
+                "전체 매출"
+            ]
+            db_key_mapping = {
+                "자동 감지 (통합 엑셀 / 원본 보고서)": "자동 감지",
+                "네이버 광고": "DB_네이버",
+                "쿠팡 광고": "DB_쿠팡",
+                "메타 광고": "DB_메타",
+                "전체 매출": "DB_매출"
+            }
+            selected_choice = st.selectbox("파일 종류 선택", db_type_choices)
+            selected_db_type = db_key_mapping[selected_choice]
+
+        with opt_c2:
+            default_m_str = selected_month if (selected_month and selected_month.startswith(f"{selected_year}-")) else f"{selected_year}-01"
+            input_period = st.text_input("귀속 연월 (YYYY-MM)", value=default_m_str)
+            try:
+                p_parts = input_period.strip().split("-")
+                attr_year = int(p_parts[0])
+                attr_month = f"{p_parts[0]}-{p_parts[1].zfill(2)}"
+            except Exception:
+                attr_year = selected_year
+                attr_month = f"{selected_year}-01"
+
+        with opt_c3:
+            import_mode_choice = st.radio("반영 방식", ["🔄 덮어쓰기", "➕ 누적 추가"], index=1, horizontal=True)
+            mode_param = "append" if "누적" in import_mode_choice else "overwrite"
+
+        st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+
+        # 2행: 파일 선택 드래그앤드롭 + 즉시 적용 버튼 + 연동 방식 안내 (칼정렬 50% : 25% : 25%)
+        file_c1, file_c2, file_c3 = st.columns([2.0, 1.0, 1.0])
+        with file_c1:
+            uploaded_file = st.file_uploader(
+                "보고서 파일 선택 (.xlsx, .xls, .csv)",
+                type=["xlsx", "xls", "csv"],
+                key="main_uploader"
+            )
+
+        with file_c2:
+            st.markdown('<div class="upload-apply-label">즉시 실행</div>', unsafe_allow_html=True)
+            apply_clicked = st.button("🚀 데이터 즉시 적용", type="primary", use_container_width=True, key="btn_apply_upload")
+
+        with file_c3:
+            st.markdown('<div class="upload-apply-label">연동 방식 안내</div>', unsafe_allow_html=True)
+            st.markdown("""
+            <div class="upload-info-box">
+                <div style="font-size: 0.85rem; color: #444746; line-height: 1.45;">
+                    • <b>덮어쓰기</b>: 해당 연월 데이터 교체<br>
+                    • <b>누적 추가</b>: 기존 데이터 보존 누적
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        if apply_clicked:
+            if uploaded_file is None:
+                st.warning("⚠️ 업로드할 보고서 파일(.xlsx, .csv)을 먼저 선택해주세요.")
+            else:
+                with st.spinner("보고서를 분석하여 데이터에 반영 중입니다..."):
+                    f_bytes = uploaded_file.read()
+                    success, msg, counts = process_uploaded_file_v2(
+                        file_bytes=f_bytes,
+                        filename=uploaded_file.name,
+                        selected_db_type=selected_db_type,
+                        target_year=attr_year,
+                        target_month=attr_month,
+                        import_mode=mode_param
+                    )
+                    if success:
+                        st.success(f"✅ {msg}")
+                        st.toast("데이터가 성공적으로 업데이트되었습니다!", icon="🎉")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ {msg}")
+
+    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
     # 현황 요약
     st.markdown("<h3>📊 현재 데이터 등록 현황</h3>", unsafe_allow_html=True)
