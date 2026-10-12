@@ -356,7 +356,6 @@ def plot_channel_cost_share(channel_df: pd.DataFrame, metric: str = "광고비")
     is_currency = target_col in ["광고비", "전환매출"]
     unit_str = "원" if is_currency else ("건" if "전환수" in target_col else "회")
     fmt_prefix = "₩" if is_currency else ""
-    ad_t_template = "%{label}<br>%{percent} (₩%{value:,.0f})" if is_currency else f"%{{label}}<br>%{{percent}} (%{{value:,.0f}}{unit_str})"
 
     fig = go.Figure(
         data=[
@@ -366,11 +365,11 @@ def plot_channel_cost_share(channel_df: pd.DataFrame, metric: str = "광고비")
                 customdata=df_plot["채널"],
                 hole=0.45,
                 marker=dict(colors=[color_map.get(ch, "#a4b0be") for ch in df_plot["채널"]]),
-                texttemplate=ad_t_template,
-                textposition="auto",
-                insidetextfont=dict(color="#ffffff", size=12, family="Pretendard, sans-serif"),
-                outsidetextfont=dict(color="#06291B", size=11, family="Pretendard, sans-serif"),
-                textfont=dict(size=12, family="Pretendard, sans-serif"),
+                textinfo="label+percent",
+                textposition="inside",
+                insidetextfont=dict(color="#ffffff", size=13, family="Pretendard, sans-serif"),
+                outsidetextfont=dict(color="#06291B", size=12, family="Pretendard, sans-serif"),
+                textfont=dict(color="#ffffff", size=13, family="Pretendard, sans-serif"),
                 hovertemplate=f"%{{label}}<br>{target_col}: {fmt_prefix}%{{value:,.0f}}{unit_str} (%{{percent}})<extra></extra>"
             )
         ]
@@ -426,7 +425,6 @@ def plot_sales_channel_share(sales_df: pd.DataFrame, metric: str = "매출액") 
     is_currency = target_col in ["매출액", "배송비", "객단가"]
     unit_str = "원" if is_currency else ("개" if "수량" in target_col else "건")
     fmt_prefix = "₩" if is_currency else ""
-    t_template = "%{label}<br>%{percent} (₩%{value:,.0f})" if is_currency else f"%{{label}}<br>%{{percent}} (%{{value:,.0f}}{unit_str})"
 
     fig = go.Figure(
         data=[
@@ -436,11 +434,11 @@ def plot_sales_channel_share(sales_df: pd.DataFrame, metric: str = "매출액") 
                 customdata=df_plot["판매 채널"],
                 hole=0.45,
                 marker=dict(colors=channel_colors[:len(df_plot)]),
-                texttemplate=t_template,
-                textposition="auto",
+                textinfo="label+percent",
+                textposition="inside",
                 insidetextfont=dict(color="#ffffff", size=12, family="Pretendard, sans-serif"),
                 outsidetextfont=dict(color="#06291B", size=11, family="Pretendard, sans-serif"),
-                textfont=dict(size=12, family="Pretendard, sans-serif"),
+                textfont=dict(color="#ffffff", size=12, family="Pretendard, sans-serif"),
                 hovertemplate=f"%{{label}}<br>{target_col}: {fmt_prefix}%{{value:,.0f}}{unit_str} (%{{percent}})<extra></extra>"
             )
         ]

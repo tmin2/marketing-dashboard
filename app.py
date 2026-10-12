@@ -501,9 +501,8 @@ st.markdown("""
             width: 100% !important;
         }
 
-        /* 📌 모바일 메뉴 탭: 3열 2행 앱 스타일 칩 버튼 & 네이버/쿠팡/메타 광고 2번째 줄 배치 */
-        div[role="radiogroup"][aria-label="메뉴 선택"],
-        div[data-testid="stRadio"] > div[role="radiogroup"] {
+        /* 📌 상단 네비게이션 메뉴 탭 전용: 3열 2행 앱 스타일 칩 버튼 & 네이버/쿠팡/메타 광고 2번째 줄 배치 */
+        div[role="radiogroup"][aria-label="메뉴 선택"] {
             display: grid !important;
             grid-template-columns: repeat(3, 1fr) !important;
             gap: 3px !important;
@@ -514,9 +513,7 @@ st.markdown("""
             border-radius: 8px !important;
         }
         div[role="radiogroup"][aria-label="메뉴 선택"] label,
-        div[data-testid="stRadio"] > div[role="radiogroup"] label,
-        div[role="radiogroup"][aria-label="메뉴 선택"] > *,
-        div[data-testid="stRadio"] > div[role="radiogroup"] > * {
+        div[role="radiogroup"][aria-label="메뉴 선택"] > * {
             padding: 4px 1px !important;
             margin: 0 !important;
             min-height: 29px !important;
@@ -528,11 +525,11 @@ st.markdown("""
             text-align: center !important;
             box-shadow: none !important;
         }
-        /* 라디오 원형 체크 아이콘 숨김 */
-        div[role="radiogroup"] label div:first-child {
+        /* 메뉴 탭 라디오 원형 체크 아이콘 숨김 (오직 메뉴 선택에서만!) */
+        div[role="radiogroup"][aria-label="메뉴 선택"] label div:first-child {
             display: none !important;
         }
-        div[role="radiogroup"] label p {
+        div[role="radiogroup"][aria-label="메뉴 선택"] label p {
             font-size: 0.70rem !important;
             font-weight: 700 !important;
             margin: 0 !important;
@@ -543,48 +540,82 @@ st.markdown("""
             text-overflow: ellipsis !important;
         }
 
-        /* [모바일 전용 정렬] 1번째 줄: 종합/매출/관리, 2번째 줄: 3대 광고 매체 (네이버, 쿠팡, 메타) */
-        div[role="radiogroup"] > *:nth-child(1),
-        div[role="radiogroup"] label:nth-of-type(1),
-        div[role="radiogroup"] label:has(input[value*="통합"]) {
+        /* [모바일 전용 정렬: 오직 메뉴 선택에만 한정] 1번째 줄: 종합/매출/관리, 2번째 줄: 3대 광고 매체 (네이버, 쿠팡, 메타) */
+        div[role="radiogroup"][aria-label="메뉴 선택"] > *:nth-child(1),
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:nth-of-type(1) {
             grid-row: 1 !important;
             grid-column: 1 !important;
             order: 1 !important;
         }
-        div[role="radiogroup"] > *:nth-child(5),
-        div[role="radiogroup"] label:nth-of-type(5),
-        div[role="radiogroup"] label:has(input[value*="매출"]) {
+        div[role="radiogroup"][aria-label="메뉴 선택"] > *:nth-child(5),
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:nth-of-type(5) {
             grid-row: 1 !important;
             grid-column: 2 !important;
             order: 2 !important;
         }
-        div[role="radiogroup"] > *:nth-child(6),
-        div[role="radiogroup"] label:nth-of-type(6),
-        div[role="radiogroup"] label:has(input[value*="관리"]) {
+        div[role="radiogroup"][aria-label="메뉴 선택"] > *:nth-child(6),
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:nth-of-type(6) {
             grid-row: 1 !important;
             grid-column: 3 !important;
             order: 3 !important;
         }
-        div[role="radiogroup"] > *:nth-child(2),
-        div[role="radiogroup"] label:nth-of-type(2),
-        div[role="radiogroup"] label:has(input[value*="네이버"]) {
+        div[role="radiogroup"][aria-label="메뉴 선택"] > *:nth-child(2),
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:nth-of-type(2) {
             grid-row: 2 !important;
             grid-column: 1 !important;
             order: 4 !important;
         }
-        div[role="radiogroup"] > *:nth-child(3),
-        div[role="radiogroup"] label:nth-of-type(3),
-        div[role="radiogroup"] label:has(input[value*="쿠팡"]) {
+        div[role="radiogroup"][aria-label="메뉴 선택"] > *:nth-child(3),
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:nth-of-type(3) {
             grid-row: 2 !important;
             grid-column: 2 !important;
             order: 5 !important;
         }
-        div[role="radiogroup"] > *:nth-child(4),
-        div[role="radiogroup"] label:nth-of-type(4),
-        div[role="radiogroup"] label:has(input[value*="메타"]) {
+        div[role="radiogroup"][aria-label="메뉴 선택"] > *:nth-child(4),
+        div[role="radiogroup"][aria-label="메뉴 선택"] label:nth-of-type(4) {
             grid-row: 2 !important;
             grid-column: 3 !important;
             order: 6 !important;
+        }
+
+        /* 📌 팝오버 내부 라디오 전용: 모바일 터치 및 클릭 100% 보장 */
+        div[data-testid="stPopoverBody"] div[data-testid="stRadio"] div[role="radiogroup"],
+        div[data-testid="stPopover"] div[data-testid="stRadio"] div[role="radiogroup"] {
+            display: flex !important;
+            flex-direction: row !important;
+            grid-template-columns: none !important;
+            gap: 8px !important;
+            background-color: transparent !important;
+            padding: 4px 0 !important;
+            width: 100% !important;
+        }
+        div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label,
+        div[data-testid="stPopover"] div[data-testid="stRadio"] label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            background-color: #F8FAF9 !important;
+            border: 1px solid #DFE7E2 !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            min-height: 36px !important;
+            flex: 1 1 0 !important;
+            justify-content: center !important;
+        }
+        div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label div:first-child,
+        div[data-testid="stPopover"] div[data-testid="stRadio"] label div:first-child {
+            display: flex !important;
+            visibility: visible !important;
+        }
+        div[data-testid="stPopoverBody"] div[data-testid="stRadio"] label p,
+        div[data-testid="stPopover"] div[data-testid="stRadio"] label p {
+            font-size: 0.85rem !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+            color: #06291B !important;
         }
 
         /* 스마트 안내 캡션 박스 숨김 (모바일 화면 대폭 절약) */
@@ -1485,10 +1516,9 @@ with nav_container:
                         }
                     }
                 });
-                // 모바일 환경일 때 1행: 통합/매출/관리, 2행: 네이버/쿠팡/메타 순서 재배치 강제 적용
+                // 모바일 환경일 때 1행: 통합/매출/관리, 2행: 네이버/쿠팡/메타 순서 재배치 강제 적용 (오직 메뉴 선택에만!)
                 if (window.innerWidth <= 768) {
-                    const group = window.parent.document.querySelector('div[role="radiogroup"][aria-label="메뉴 선택"]') 
-                               || window.parent.document.querySelector('div[data-testid="stRadio"] div[role="radiogroup"]');
+                    const group = window.parent.document.querySelector('div[role="radiogroup"][aria-label="메뉴 선택"]');
                     if (group) {
                         Array.from(group.children).forEach(el => {
                             const txt = (el.innerText || '').trim();
@@ -1691,14 +1721,14 @@ if "통합 대시보드" in selected_page:
     ad_channels = [str(ch).strip() for ch in ad_channel_df["채널"]]
 
     col_cfg_ad = {
-        "채널": st.column_config.TextColumn("채널", width="small"),
-        "광고비": st.column_config.NumberColumn("광고비", format="₩%,d", width="medium"),
-        "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
-        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="medium"),
-        "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
-        "전환매출": st.column_config.NumberColumn("전환매출", format="₩%,d", width="medium"),
-        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
-        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
+        "채널": st.column_config.TextColumn("채널"),
+        "광고비": st.column_config.NumberColumn("광고비", format="₩%,d"),
+        "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
+        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
+        "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
+        "전환매출": st.column_config.NumberColumn("전환매출", format="₩%,d"),
+        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
+        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
     }
 
     ad_table_event = st.dataframe(
@@ -1805,12 +1835,12 @@ if "통합 대시보드" in selected_page:
         sales_channels = [str(ch).strip() for ch in sales_channel_df["판매 채널"] if str(ch).strip() and str(ch).strip() != "nan"]
 
         col_cfg_sales = {
-            "판매 채널": st.column_config.TextColumn("판매 채널", width="small"),
-            "매출액": st.column_config.NumberColumn("매출액", format="₩%,d", width="medium"),
-            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개", width="small"),
-            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건", width="small"),
-            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d", width="small"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
+            "판매 채널": st.column_config.TextColumn("판매 채널"),
+            "매출액": st.column_config.NumberColumn("매출액", format="₩%,d"),
+            "판매수량": st.column_config.NumberColumn("판매수량", format="%,d개"),
+            "배송건수": st.column_config.NumberColumn("배송건수", format="%,d건"),
+            "배송비": st.column_config.NumberColumn("배송비", format="₩%,d"),
+            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
         }
 
         sales_table_event = st.dataframe(
@@ -1865,18 +1895,18 @@ if "통합 대시보드" in selected_page:
     all_monthly_df = get_monthly_trend_table(all_dbs, target_year=None)
 
     col_cfg_monthly = {
-        "월": st.column_config.TextColumn("월", width="small"),
-        "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d", width="medium"),
-        "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d", width="medium"),
-        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
-        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
-        "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
-        "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
-        "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
-        "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
-        "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
-        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
-        "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
+        "월": st.column_config.TextColumn("월"),
+        "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d"),
+        "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d"),
+        "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
+        "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
+        "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
+        "CPC": st.column_config.NumberColumn("CPC", format="₩%,d"),
+        "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
+        "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
+        "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
+        "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
+        "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
     }
 
     with tab1:
@@ -2002,18 +2032,18 @@ if "통합 대시보드" in selected_page:
         yearly_df = yearly_df.sort_values(by="연도", ascending=False).reset_index(drop=True)
 
         col_cfg_yearly = {
-            "연도": st.column_config.TextColumn("연도", width="small"),
-            "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d", width="medium"),
-            "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d", width="medium"),
-            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx", width="small"),
-            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d", width="small"),
-            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d", width="small"),
-            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d", width="small"),
-            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%", width="small"),
-            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%", width="small"),
-            "노출수": st.column_config.NumberColumn("노출수", format="%,d", width="medium"),
-            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d", width="small"),
-            "전환수": st.column_config.NumberColumn("전환수", format="%,d", width="small"),
+            "연도": st.column_config.TextColumn("연도"),
+            "총 광고비": st.column_config.NumberColumn("총 광고비", format="₩%,d"),
+            "총 매출": st.column_config.NumberColumn("총 매출", format="₩%,d"),
+            "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
+            "CPA": st.column_config.NumberColumn("CPA", format="₩%,d"),
+            "객단가": st.column_config.NumberColumn("객단가", format="₩%,d"),
+            "CPC": st.column_config.NumberColumn("CPC", format="₩%,d"),
+            "CTR": st.column_config.NumberColumn("CTR", format="%.2f%%"),
+            "CVR": st.column_config.NumberColumn("CVR", format="%.2f%%"),
+            "노출수": st.column_config.NumberColumn("노출수", format="%,d"),
+            "클릭수": st.column_config.NumberColumn("클릭수", format="%,d"),
+            "전환수": st.column_config.NumberColumn("전환수", format="%,d"),
         }
 
         yearly_table_event = st.dataframe(
@@ -2268,12 +2298,12 @@ def render_channel_page(
         final_show_cols = [c for c in ordered_cols if c in df_disp.columns]
         df_disp = df_disp[final_show_cols]
 
-        # 7) 컬럼 설정 (회계 서식 및 너비)
+        # 7) 컬럼 설정 (회계 서식 및 자동 너비 오토핏)
         col_cfg_detail = {
-            "월": st.column_config.TextColumn("월", width="small"),
-            "마케팅 분류": st.column_config.TextColumn("분류", width="small"),
-            "매출분류": st.column_config.TextColumn("판매 채널", width="medium"),
-            "캠페인 이름": st.column_config.TextColumn("캠페인명", width="medium"),
+            "월": st.column_config.TextColumn("월"),
+            "마케팅 분류": st.column_config.TextColumn("분류"),
+            "매출분류": st.column_config.TextColumn("판매 채널"),
+            "캠페인 이름": st.column_config.TextColumn("캠페인명"),
             "광고비": st.column_config.NumberColumn("광고비", format="₩%,d"),
             "전환매출": st.column_config.NumberColumn("매출액" if db_key == "DB_매출" else "전환매출", format="₩%,d"),
             "ROAS": st.column_config.NumberColumn("ROAS", format="%.2fx"),
