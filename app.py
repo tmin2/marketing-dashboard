@@ -216,7 +216,11 @@ st.markdown("""
         font-weight: 700 !important;
         font-size: 0.88rem !important;
     }
-    /* 📌 기준 연도 / 기준 월 셀렉트박스 - 전체 매출 버튼과 동일한 딥 네이비 테마 적용 */
+    /* 📌 기준 연도 / 기준 월 셀렉트박스 - 전체 매출 버튼과 동일한 딥 네이비 테마 적용 (Streamlit 1.65+ & BaseWeb 완벽 호환) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"] div[class*="e1fp86qc0"],
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"] div:has(> input),
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stSelectbox div[class*="e1fp86qc0"],
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stSelectbox div:has(> input),
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] > div {
         background: linear-gradient(135deg, #1E293A 0%, #312E81 100%) !important;
         border: 1.5px solid #1E293A !important;
@@ -225,26 +229,38 @@ st.markdown("""
         cursor: pointer !important;
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"] div[class*="e1fp86qc0"]:hover,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"] div:has(> input):hover,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stSelectbox div:has(> input):hover,
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] > div:hover {
         background: linear-gradient(135deg, #2D3748 0%, #3730A3 100%) !important;
         border-color: #4F46E5 !important;
         box-shadow: 0 4px 12px rgba(49, 46, 129, 0.35) !important;
         transform: translateY(-1px) !important;
     }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"] input,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stSelectbox input,
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] * {
         color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
         font-weight: 700 !important;
+        font-size: 0.94rem !important;
+        background: transparent !important;
     }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"] button,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"] svg,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stSelectbox button,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stSelectbox svg,
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] svg {
         color: #FFFFFF !important;
         fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
     }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"] svg path,
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) .stSelectbox svg path,
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] svg path {
         fill: #FFFFFF !important;
         stroke: #FFFFFF !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.fixed-top-nav-anchor) [data-baseweb="select"] input {
-        color: #FFFFFF !important;
     }
 
     /* 드롭다운 옵션 팝업 리스트 스타일 (열렸을 때 가독성 보장) */
@@ -1776,6 +1792,36 @@ with nav_container:
                     }
                 });
 
+                // 3. 기준 연도 및 기준 월 셀렉트박스에 전체 매출 테마(#1E293A~#312E81) 강제 주입
+                const targetSelects = window.parent.document.querySelectorAll(
+                    'div[data-testid="stColumn"]:has(.top-controls-wrapper-anchor) div[data-testid="stSelectbox"], ' +
+                    'div:has(.top-controls-wrapper-anchor) div[data-testid="stSelectbox"], ' +
+                    'div:has(.fixed-top-nav-anchor) div[data-testid="stSelectbox"]'
+                );
+                targetSelects.forEach(sb => {
+                    const box = sb.querySelector('div[class*="e1fp86qc0"]') ||
+                                sb.querySelector('div:has(> input)') ||
+                                sb.querySelector('input')?.parentElement;
+                    if (box) {
+                        box.style.setProperty('background', 'linear-gradient(135deg, #1E293A 0%, #312E81 100%)', 'important');
+                        box.style.setProperty('border', '1.5px solid #1E293A', 'important');
+                        box.style.setProperty('border-radius', '8px', 'important');
+                        box.style.setProperty('box-shadow', '0 2px 8px rgba(30, 41, 58, 0.25)', 'important');
+                    }
+                    const inp = sb.querySelector('input');
+                    if (inp) {
+                        inp.style.setProperty('color', '#FFFFFF', 'important');
+                        inp.style.setProperty('-webkit-text-fill-color', '#FFFFFF', 'important');
+                        inp.style.setProperty('font-weight', '700', 'important');
+                    }
+                    const icons = sb.querySelectorAll('button, svg, svg path');
+                    icons.forEach(ic => {
+                        ic.style.setProperty('color', '#FFFFFF', 'important');
+                        ic.style.setProperty('fill', '#FFFFFF', 'important');
+                        ic.style.setProperty('stroke', '#FFFFFF', 'important');
+                    });
+                });
+
                 // 모바일 환경일 때 1행: 통합/매출/관리, 2행: 네이버/쿠팡/메타 순서 재배치 강제 적용
                 if (window.innerWidth <= 768) {
                     const group = window.parent.document.querySelector('div[role="radiogroup"][aria-label="메뉴 선택"]');
@@ -1794,9 +1840,16 @@ with nav_container:
             } catch(e) {}
         }
         styleNavAndTooltips();
-        setTimeout(styleNavAndTooltips, 100);
+        setTimeout(styleNavAndTooltips, 50);
+        setTimeout(styleNavAndTooltips, 150);
         setTimeout(styleNavAndTooltips, 400);
         setTimeout(styleNavAndTooltips, 1000);
+        setTimeout(styleNavAndTooltips, 2000);
+
+        if (!window.__navStyleObserverAttached) {
+            window.__navStyleObserverAttached = true;
+            window.parent.document.addEventListener('click', () => { setTimeout(styleNavAndTooltips, 50); setTimeout(styleNavAndTooltips, 200); });
+        }
         </script>
         """, unsafe_allow_html=True)
 
